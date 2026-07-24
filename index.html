@@ -183,6 +183,7 @@
 
 <script>
 "use strict";
+const APP_VERSION="1.0.0"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -457,7 +458,7 @@ function headerHTML(){
   const sub=d<0?`Surgery in ${-d} day${-d===1?"":"s"}`:(w>tw?`Day ${d} · Care schedule complete`:`Day ${d} · Week ${w} of ${tw}`);
   return `<header class="top"><div class="row"><h1>${esc(S.patient)}&#8217;s Recovery</h1>
     <button class="whochip" id="whobtn" title="Who's caring right now">🤝 ${esc(me())}</button></div>
-    <div class="daychip">${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span></div></header>`;
+    <div class="daychip">${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span> <span style="font-size:11px;opacity:.5" title="App version">v${APP_VERSION}</span></div></header>`;
 }
 function render(){
   renderTabs();
@@ -479,6 +480,7 @@ function render(){
   else if(VIEW==="schedule")wireSchedule();
   else wireMore();
   wireMicButtons();
+  wireDatePickers();
   ensureIdentity();
 }
 
@@ -1133,6 +1135,7 @@ function moreHTML(){
     <div class="btnrow"><button class="btn sec" id="dt-export">Export / back up</button><button class="btn sec" id="dt-import">Import</button><button class="btn danger" id="dt-reset">Reset everything</button></div>
     <p class="muted" style="margin-top:10px">Everything syncs automatically to the shared care log — every caregiver's phone sees the same tasks, drain totals, and notes. Export makes a backup copy; Import restores one.</p>
   </div>
+  <div class="muted" style="text-align:center;font-size:11px;margin-top:14px;opacity:.7">Recovery Track&nbsp;·&nbsp;v${APP_VERSION}</div>
   <p class="muted" style="text-align:center;margin:16px 0">Instructions adapted from Memorial Sloan Kettering's “Caring for Your Jackson-Pratt Drain” and “Exercises After Your Mastectomy” guides (including the surgeon's handwritten notes) and the NBCF prep checklist. This app is a helper, not medical advice — when unsure, call the care team.</p>`;
 }
 function wireMore(){
@@ -1290,6 +1293,16 @@ function wireMicButtons(){
     btn.onclick=()=>startDictation(btn.dataset.mic,btn);
   });
 }
+// Make the whole date field open the native calendar on click/focus,
+// not just the small calendar icon (which is easy to miss).
+function wireDatePickers(){
+  $$('input[type="date"]').forEach(el=>{
+    if(el._dpWired)return; el._dpWired=true;
+    const open=()=>{try{if(el.showPicker)el.showPicker();}catch(e){}};
+    el.addEventListener("click",open);
+    el.addEventListener("focus",open);
+  });
+}
 function startDictation(targetId,btn){
   const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!Rec)return;
@@ -1425,6 +1438,7 @@ function openSheet(html,onClose){
   $("#modal").innerHTML=`<div class="overlay" id="ovl"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
   $("#ovl").onclick=e=>{if(e.target.id==="ovl")closeSheet();};
   wireMicButtons();
+  wireDatePickers();
 }
 function closeSheet(){if(activeRecognition){try{activeRecognition.stop();}catch(e){}activeRecognition=null;}if(onCloseSheet)onCloseSheet();onCloseSheet=null;$("#modal").innerHTML="";if(pullSkipped){pullSkipped=false;setTimeout(syncNow,700);}}
 
