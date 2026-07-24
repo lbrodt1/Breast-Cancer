@@ -1,0 +1,11 @@
+# Recovery Track — static single-file app, no build step.
+# Netlify publishes everything in the repo root; index.html is the app.
+[build]
+  publish = "."
+  command = ""
+
+# Send any unknown path back to the app (single-page friendly).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

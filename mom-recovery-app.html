@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F4F0">
+</head>
+<body>
+<!--A-START-->
+<title>Recovery Track</title>
+<style>
+  :root{
+    --bg:#F7F4F0; --card:#FFFFFF; --card2:#F1ECE7; --ink:#2B2530; --ink2:#6E6472;
+    --line:#E4DDD6; --accent:#8E4A5B; --accent-ink:#FFFFFF; --accent-soft:#F3E4E8;
+    --good:#5F7D66; --good-soft:#E7EFE8; --warn:#A9743A; --warn-soft:#F5EADA;
+    --alert:#A63D40; --alert-soft:#F6E3E3; --shadow:0 1px 3px rgba(43,37,48,.08);
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --bg:#171519; --card:#211E24; --card2:#2A262E; --ink:#EDE7EA; --ink2:#A99FAC;
+    --line:#38323D; --accent:#C98B9B; --accent-ink:#2B1219; --accent-soft:#3A2830;
+    --good:#8FB098; --good-soft:#26332A; --warn:#CFA05F; --warn-soft:#3A3022;
+    --alert:#D98A8C; --alert-soft:#402628; --shadow:0 1px 3px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{
+    --bg:#F7F4F0; --card:#FFFFFF; --card2:#F1ECE7; --ink:#2B2530; --ink2:#6E6472;
+    --line:#E4DDD6; --accent:#8E4A5B; --accent-ink:#FFFFFF; --accent-soft:#F3E4E8;
+    --good:#5F7D66; --good-soft:#E7EFE8; --warn:#A9743A; --warn-soft:#F5EADA;
+    --alert:#A63D40; --alert-soft:#F6E3E3; --shadow:0 1px 3px rgba(43,37,48,.08);
+  }
+  :root[data-theme="dark"]{
+    --bg:#171519; --card:#211E24; --card2:#2A262E; --ink:#EDE7EA; --ink2:#A99FAC;
+    --line:#38323D; --accent:#C98B9B; --accent-ink:#2B1219; --accent-soft:#3A2830;
+    --good:#8FB098; --good-soft:#26332A; --warn:#CFA05F; --warn-soft:#3A3022;
+    --alert:#D98A8C; --alert-soft:#402628; --shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;
+  }
+  #app{max-width:540px;margin:0 auto;padding:0 14px 96px;}
+  h1,h2,h3{font-family:Charter,Georgia,"Times New Roman",serif;text-wrap:balance;margin:0}
+  button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  input,textarea,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+  textarea{min-height:72px;resize:vertical}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* header */
+  header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  header.top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  header.top h1{font-size:24px}
+  .daychip{font-size:13px;color:var(--ink2)}
+  .whochip{font-size:13px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink)}
+
+  /* cards & sections */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+  .card.flat{box-shadow:none}
+  .sect{margin:18px 0 8px;display:flex;align-items:baseline;justify-content:space-between}
+  .sect h2{font-size:18px}
+  .sect .meta{font-size:13px;color:var(--ink2)}
+  .banner{border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;border:1px solid transparent}
+  .banner.alert{background:var(--alert-soft);border-color:var(--alert);color:var(--ink)}
+  .banner.warn{background:var(--warn-soft);border-color:var(--warn)}
+  .banner.good{background:var(--good-soft);border-color:var(--good)}
+  .pill{display:inline-block;font-size:12px;border-radius:999px;padding:2px 9px;vertical-align:1px}
+  .pill.good{background:var(--good-soft);color:var(--good)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.alert{background:var(--alert-soft);color:var(--alert)}
+  .pill.plain{background:var(--card2);color:var(--ink2)}
+
+  /* task rows */
+  .task{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+  .task:first-child{border-top:none;padding-top:2px}
+  .task:last-child{padding-bottom:2px}
+  .task.overdue .t-title::after{content:" · missed?";color:var(--warn);font-size:13px}
+  .task.future{opacity:.6}
+  .check:disabled{opacity:.35;cursor:not-allowed}
+  .check{flex:none;width:30px;height:30px;margin-top:2px;border-radius:50%;border:2px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:16px;color:transparent;transition:background .15s,border-color .15s}
+  .task.done .check{background:var(--good);border-color:var(--good);color:#fff}
+  .t-main{flex:1;min-width:0}
+  .t-title{font-weight:600}
+  .task.done .t-title{color:var(--ink2);text-decoration:line-through;text-decoration-thickness:1px}
+  .t-sub{font-size:13px;color:var(--ink2)}
+  .t-done{font-size:13px;color:var(--good)}
+  .t-note{font-size:13px;color:var(--ink2);background:var(--card2);border-radius:8px;padding:6px 9px;margin-top:6px;white-space:pre-wrap}
+  .chev{flex:none;color:var(--ink2);padding:4px 2px;font-size:13px}
+  .instr{font-size:14px;color:var(--ink);background:var(--card2);border-radius:10px;padding:10px 12px;margin-top:8px}
+  .instr ol,.instr ul{margin:6px 0;padding-left:20px}
+  .instr li{margin:4px 0}
+  .instr p{margin:6px 0}
+  .surgnote{font-size:13px;color:var(--accent);font-weight:600}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--accent-ink);border-radius:11px;padding:11px 18px;font-weight:600;min-height:44px}
+  .btn.sec{background:var(--card2);color:var(--ink);border:1px solid var(--line)}
+  .btn.danger{background:var(--alert-soft);color:var(--alert);border:1px solid var(--alert)}
+  .btn.small{min-height:36px;padding:6px 12px;font-size:14px;border-radius:9px}
+  .btn.wide{width:100%}
+  .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .linky{color:var(--accent);font-weight:600;font-size:14px}
+
+  /* chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px;min-height:38px}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+
+  /* tabs */
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  nav.tabs .inner{max-width:540px;margin:0 auto;display:flex}
+  nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 7px;font-size:11px;color:var(--ink2)}
+  nav.tabs button .ico{font-size:20px;line-height:1}
+  nav.tabs button.on{color:var(--accent);font-weight:700}
+
+  /* drain table */
+  .scrollx{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--ink2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .dcell{background:var(--card2);border:1px dashed var(--line);border-radius:10px;padding:8px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .dcell.filled{border-style:solid;background:var(--good-soft);border-color:var(--good)}
+  .dcell .lbl{font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+  .dcell .val{font-weight:700;font-size:17px}
+  .dcell .clr{font-size:11px;color:var(--ink2)}
+
+  /* exercises */
+  .exitem{padding:10px 0;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+  .exitem:first-child{border-top:none}
+  .exnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--ink2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .exitem.done .exnum{background:var(--good);color:#fff}
+
+  /* timer */
+  .timerbig{font-family:Charter,Georgia,serif;font-size:64px;text-align:center;font-variant-numeric:tabular-nums;margin:10px 0}
+  .timerbar{height:8px;border-radius:4px;background:var(--card2);overflow:hidden;margin-bottom:14px}
+  .timerbar>div{height:100%;background:var(--accent);width:0%}
+
+  /* notes */
+  .note{border-top:1px solid var(--line);padding:12px 0}
+  .note:first-child{border-top:none}
+  .note .meta{font-size:13px;color:var(--ink2);display:flex;justify-content:space-between;gap:8px}
+  .note .body{white-space:pre-wrap;margin-top:4px}
+  .note.pinned{background:var(--accent-soft);border-radius:10px;padding:12px;border-top:none;margin-bottom:8px}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(20,15,22,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:var(--card);width:100%;max-width:540px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
+  .sheet h3{font-size:19px;margin-bottom:12px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:13px;color:var(--ink2);margin-bottom:5px;font-weight:600}
+  .rowflex{display:flex;gap:8px;align-items:center}
+  .muted{color:var(--ink2);font-size:13px}
+  .divider{height:1px;background:var(--line);margin:14px 0}
+  details{margin:8px 0}
+  summary{cursor:pointer;font-weight:600;padding:6px 0}
+
+  /* calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-dows .cal-dow{text-align:center;font-size:11px;color:var(--ink2);padding:2px 0}
+  .cal-cell{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:40px;padding:0}
+  .cal-cell.empty{border:none;background:none}
+  .cal-cell.out{opacity:.38}
+  .cal-cell.today{border-color:var(--accent);border-width:2px;font-weight:700}
+  .cal-num{font-size:13px;font-variant-numeric:tabular-nums}
+  .cal-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+  .cal-dot.surg{background:var(--accent)}
+  .cal-dot.task{background:var(--warn)}
+  .cal-dot.done{background:var(--good)}
+  .cal-legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink2)}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+
+<div id="app"></div>
+<nav class="tabs"><div class="inner" id="tabbar"></div></nav>
+<div id="modal"></div>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const dstr=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const todayStr=()=>dstr(new Date());
+const parseD=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);};
+const fmtTime=d=>{let h=d.getHours(),m=pad(d.getMinutes()),ap=h>=12?"PM":"AM";h=h%12||12;return h+":"+m+" "+ap;};
+const fmtDateNice=s=>parseD(s).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const PERIODS=[["morning","Morning",0,12],["midday","Midday",12,17],["evening","Evening",17,23],["anytime","Anytime",0,24]];
+const PLABEL=Object.fromEntries(PERIODS.map(p=>[p[0],p[1]]));
+
+/* ---------- shared sync (Supabase) ---------- */
+const SYNC={url:"https://zewetwghnbiynuqkisbg.supabase.co",key:"sb_publishable_K6vRtMTydN6VqqBh6d1itA_SR5RHCkz",table:"mom_recovery_records"};
+const AI_FN_URL="https://zewetwghnbiynuqkisbg.supabase.co/functions/v1/daily-summary";
+let lastSnap={}, flushTimer=null, syncBusy=false, pullSkipped=false, syncState="off";
+async function sreq(method,path,body,extra){
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),9000);
+  try{
+    const res=await fetch(SYNC.url+path,{method,signal:ctl.signal,
+      headers:Object.assign({apikey:SYNC.key,Authorization:"Bearer "+SYNC.key,"Content-Type":"application/json"},extra||{}),
+      body:body?JSON.stringify(body):undefined});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const txt=await res.text();
+    return txt?JSON.parse(txt):null;
+  }finally{clearTimeout(t);}
+}
+function toRecords(st){
+  const m={};
+  if(st.setup)m.settings={kind:"settings",data:{patient:st.patient,surgeryDate:st.surgeryDate,careEndDate:st.careEndDate,caregivers:st.caregivers,drains:st.drains,scarOK:st.scarOK,testMode:st.testMode,taskOverrides:st.taskOverrides,prep:st.prep,generalNotes:st.generalNotes}};
+  st.meds.forEach(x=>m["med_"+x.id]={kind:"med",data:x});
+  st.customTasks.forEach(x=>m["ctask_"+x.id]={kind:"ctask",data:x});
+  Object.entries(st.completions).forEach(([k,v])=>m["comp_"+k]={kind:"comp",data:v});
+  Object.keys(st.exItems).forEach(k=>m["ex_"+k]={kind:"ex",data:{v:1}});
+  st.drainLogs.forEach(x=>m["log_"+x.id]={kind:"log",data:x});
+  st.notes.forEach(x=>m["note_"+x.id]={kind:"note",data:x});
+  st.watchItems.forEach(x=>m["watch_"+x.id]={kind:"watch",data:x});
+  Object.entries(st.aiSummaries).forEach(([date,v])=>m["aisum_"+date]={kind:"aisummary",data:Object.assign({date},v)});
+  return m;
+}
+function applyRecords(map){
+  const st=defaults();
+  const set=map.settings&&map.settings.data;
+  if(set){Object.assign(st,JSON.parse(JSON.stringify(set)));st.setup=true;}
+  else Object.assign(st,{patient:S.patient,surgeryDate:S.surgeryDate,careEndDate:S.careEndDate,caregivers:S.caregivers,drains:S.drains,scarOK:S.scarOK,testMode:S.testMode,taskOverrides:S.taskOverrides,prep:S.prep,generalNotes:S.generalNotes,setup:S.setup});
+  for(const[id,r]of Object.entries(map)){
+    if(id==="settings")continue;
+    const d=JSON.parse(JSON.stringify(r.data));
+    if(id.startsWith("med_"))st.meds.push(d);
+    else if(id.startsWith("ctask_"))st.customTasks.push(d);
+    else if(id.startsWith("comp_"))st.completions[id.slice(5)]=d;
+    else if(id.startsWith("ex_"))st.exItems[id.slice(3)]=true;
+    else if(id.startsWith("log_"))st.drainLogs.push(d);
+    else if(id.startsWith("note_"))st.notes.push(d);
+    else if(id.startsWith("watch_"))st.watchItems.push(d);
+    else if(id.startsWith("aisum_"))st.aiSummaries[d.date]=d;
+  }
+  st.drainLogs.sort((a,b)=>(a.at||0)-(b.at||0));
+  st.notes.sort((a,b)=>(b.at||0)-(a.at||0));
+  st.watchItems.sort((a,b)=>(b.at||0)-(a.at||0));
+  S=st;save();
+}
+async function flushDiff(){
+  const cur=toRecords(S), ups=[], dels=[];
+  for(const id in cur)if(!lastSnap[id]||JSON.stringify(lastSnap[id])!==JSON.stringify(cur[id]))
+    ups.push({id,kind:cur[id].kind,data:cur[id].data,updated_at:new Date().toISOString()});
+  for(const id in lastSnap)if(!(id in cur))dels.push(id);
+  if(ups.length)await sreq("POST","/rest/v1/"+SYNC.table,ups,{Prefer:"resolution=merge-duplicates,return=minimal"});
+  if(dels.length)await sreq("DELETE","/rest/v1/"+SYNC.table+"?id=in."+encodeURIComponent("("+dels.map(i=>'"'+i.replace(/"/g,"")+'"').join(",")+")"));
+  lastSnap=JSON.parse(JSON.stringify(cur));
+}
+async function pullMerge(){
+  if(document.querySelector(".overlay")){pullSkipped=true;return;}
+  const rows=await sreq("GET","/rest/v1/"+SYNC.table+"?select=id,kind,data&limit=10000")||[];
+  const server={};rows.forEach(r=>server[r.id]={kind:r.kind,data:r.data});
+  const cur=toRecords(S), merged={};
+  for(const id in cur)if(!(id in lastSnap))merged[id]=cur[id];
+  for(const id in server)merged[id]=server[id];
+  const changed=JSON.stringify(cur)!==JSON.stringify(merged);
+  lastSnap=JSON.parse(JSON.stringify(server));
+  if(changed){applyRecords(merged);render();}
+}
+async function syncNow(){
+  if(!SYNC.url||syncBusy)return;
+  syncBusy=true;setSyncUI("sync");
+  try{await flushDiff();await pullMerge();await flushDiff();setSyncUI("ok");}
+  catch(e){setSyncUI("err");}
+  finally{syncBusy=false;}
+}
+function scheduleFlush(){if(!SYNC.url)return;clearTimeout(flushTimer);flushTimer=setTimeout(syncNow,500);}
+function setSyncUI(s){
+  syncState=s;const el=document.getElementById("syncdot");
+  if(el)el.textContent=s==="err"?" · offline — saved on this phone, will catch up":"";
+}
+
+/* ---------- state ---------- */
+const KEY="momRecoveryV1", DEVKEY="momRecoveryDevice";
+let S=null;
+function defaults(){return{
+  v:1, setup:false, patient:"Mom", surgeryDate:todayStr(), careEndDate:null, caregivers:["Caregiver"],
+  drains:[{id:"d1",label:"JP #1",removedOn:null},{id:"d2",label:"JP #2",removedOn:null}],
+  scarOK:false, testMode:false, meds:[], customTasks:[], taskOverrides:{},
+  completions:{}, drainLogs:[], exItems:{}, notes:[], prep:{}, watchItems:[], aiSummaries:{},
+  generalNotes:{text:"",by:"",at:0}
+};}
+function load(){try{const raw=localStorage.getItem(KEY);S=raw?Object.assign(defaults(),JSON.parse(raw)):defaults();}catch(e){S=defaults();}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} scheduleFlush();}
+function me(){return localStorage.getItem(DEVKEY)||S.caregivers[0]||"Caregiver";}
+function setMe(n){localStorage.setItem(DEVKEY,n);}
+
+function dayNum(date){return Math.round((parseD(date)-parseD(S.surgeryDate))/86400000);}
+function weekNum(date){return Math.floor(dayNum(date)/7)+1;}
+function careEnd(){return S.careEndDate||dstr(new Date(parseD(S.surgeryDate).getTime()+41*86400000));}
+function totalWeeks(){return Math.max(1,weekNum(careEnd()));}
+function activeDrains(){return S.drains.filter(d=>!d.removedOn);}
+const PERIOD_START=Object.fromEntries(PERIODS.map(p=>[p[0],p[2]]));
+function periodStarted(date,pid){
+  if(date<todayStr())return true;
+  if(date>todayStr())return false;
+  return new Date().getHours()>=PERIOD_START[pid];
+}
+
+/* ---------- clinical content (MSK / NBCF sources + surgeon's handwritten notes) ---------- */
+const DRAIN_COLORS=["Dark red","Red","Pink","Pale yellow","Clear"];
+const LINKS={
+  drainGuide:"https://www.mskcc.org/cancer-care/patient-education/caring-your-jackson-pratt-drain",
+  drainVideo:"https://www.mskcc.org/pe/jackson-pratt-video",
+  exGuide:"https://www.mskcc.org/cancer-care/patient-education/exercises-after-your-mastectomy"
+};
+const extLink=(u,l)=>`<a class="linky" href="${u}" target="_blank" rel="noopener">${l} ↗</a>`;
+const INSTR={
+  milk:`<p><strong>Milk the tubing first</strong> (moves clots, keeps drainage flowing):</p>
+  <ol><li>Clean your hands — soap for 20 seconds, or hand sanitizer.</li>
+  <li>Look in a mirror at the tubing so you can see where your hands are.</li>
+  <li>Pinch the tubing close to the skin with thumb and forefinger and <em>hold it there</em> so nothing tugs on the skin. Alcohol wipes help your fingers slide.</li>
+  <li>With the other hand, pinch just below and slide down the tubing, pushing clots toward the bulb. Repeat as needed.</li></ol>
+  <p>If you can't move a clot and there's little or no drainage in the bulb, call the care team.</p>`,
+  empty:`<p><strong>Empty and measure each drain separately</strong> — never add drains together:</p>
+  <ol><li>Unplug the stopper on top of the bulb (don't touch the inside of the stopper or opening).</li>
+  <li>Turn the bulb upside down and gently squeeze the drainage into the measuring cup.</li>
+  <li>Turn the bulb right side up. Squeeze until your fingers feel your palm — all air out.</li>
+  <li>Keep squeezing while you re-plug the stopper. The bulb must stay fully compressed — that's what makes the suction work.</li>
+  <li>Clip the bulb back to the bra or wrap (surgeon's note: or pinned to it). Don't let it dangle.</li>
+  <li>Check amount and color. Dark red the first days is normal; it turns pink then pale yellow as healing continues.</li>
+  <li>Log the mL and color here, then flush the drainage and rinse the cup.</li></ol>`,
+  site:`<p>After emptying, clean your hands, then check the skin where each tube enters for:</p>
+  <ul><li>Tenderness, swelling, pus, or warmth</li>
+  <li>More redness than usual (a dime-size ring of redness at the site is normal)</li></ul>
+  <p>Any of these — or a fever of <strong>101 °F (38.3 °C)</strong> or higher — call the care team. Keep the site clean and dry: wash gently with soap, pat dry.</p>`,
+  problems:`<ul>
+  <li><strong>Bulb won't stay compressed</strong> — re-do the emptying steps (squeeze fully, stopper closed tight). Still expanded? Call the care team.</li>
+  <li><strong>No drainage, or a sudden decrease</strong> — clots may be blocking the tube. Milk the tubing; if drainage doesn't pick up, call.</li>
+  <li><strong>Leaking around the insertion site</strong> — milk the tubing.</li>
+  <li><strong>Tube falls out</strong> — put a new bandage over the site and call.</li>
+  <li><strong>Redness bigger than a dime, swelling, heat, or pus</strong> — take her temperature and call.</li></ul>`,
+  removal:`<p><strong>After a drain is removed</strong> (surgeon's notes included):</p>
+  <ul><li>Take the bandage off after <strong>48 hours</strong>. She may shower then — <strong>do not scrub over the incision and don't try to wash off the skin glue</strong>.</li>
+  <li>No soaking: no bathtub or pool until the incision is fully closed (with reconstruction, keep the incision out of standing water 4–6 weeks).</li>
+  <li>Wash the site gently with soap, rinse with warm water, pat dry.</li>
+  <li>With reconstruction: change the bandage <strong>as directed by the plastic surgeon</strong>.</li>
+  <li>Normal: slight redness, mild swelling, tenderness, a small amount of clear or slightly bloody drainage on the gauze.</li></ul>`,
+  redflags:`<p><strong>Call right away if:</strong></p>
+  <ul><li>Bright red drainage on the bandage or from the incision (surgeon's note)</li>
+  <li>Fever 101 °F (38.3 °C) or higher</li>
+  <li>Increased redness, tenderness, swelling, pressure, or pus at an insertion site</li>
+  <li>Skin hot to the touch around the surgical sites</li>
+  <li>A clot can't be moved into the bulb and there's little or no drainage</li></ul>
+  <p><strong>Call weekdays 9–5 if:</strong></p>
+  <ul><li>Drainage suddenly drops, or increases by 100 mL over 24 hours</li>
+  <li>Drainage is 30 mL or less in 24 hours (the surgeon may be ready to remove the drain)</li>
+  <li>The tube falls out, the bulb won't compress, or you have any problem caring for the drain</li></ul>`
+};
+const EXERCISES=[
+ {id:"breath",name:"Deep Breathing",reps:"A few slow breaths",steps:["Sit comfortably in a chair.","Slow, deep breath in through the nose — let chest and belly expand.","Breathe out slowly through the mouth."],tip:"Use this any time something feels tight — pause the stretch, breathe, then try a little further only if the tightness eases."},
+ {id:"rolls",name:"Backward Shoulder Rolls",reps:"5 times → build to 10",steps:["Sit or stand, arms relaxed at your sides.","Circle both shoulders forward, up, backward, and down — make the circles as big as comfortable.","Repeat 5 times."],tip:"Tightness across the chest? Start with smaller circles and grow them as it eases."},
+ {id:"wings",name:"Shoulder Wings",reps:"5 times → build to 10",steps:["Place hands on chest or collarbone.","Raise elbows out to the sides, up to shoulder level.","Slowly lower the elbows.","Repeat 5 times, then slowly lower the hands."],tip:"Discomfort? Hold the position and deep-breathe. If it passes, go a little higher; if not, stop there."},
+ {id:"backcirc",name:"Backward Arm Circles",reps:"5 times → build to 10",steps:["Stand, feet slightly apart. Raise the affected arm out to the side as high as comfortable.","Slow backward circles in the air — move from the shoulder, elbow straight.","Make each circle a little larger. Repeat 5 times.","Slowly lower the arm."],tip:"Surgery on both sides? One arm at a time — both at once puts too much pressure on the chest."},
+ {id:"fwdcirc",name:"Forward Arm Circles",reps:"5 times → build to 10",steps:["Same as backward arm circles, but circle forward.","Rest the arm for a moment between backward and forward circles."],tip:""},
+ {id:"wex",name:"W Exercise",reps:"5 times → build to 10 · 5-second squeeze",steps:["Sitting or standing, form a “W” — arms out, palms forward, hands near face level (or the highest comfortable spot).","Pinch shoulder blades together and downward, like squeezing a pencil between them. Hold 5 seconds.","Slowly return. Repeat 5 times, then lower the hands."],tip:"Discomfort? Hold, deep-breathe, and only go further if it eases."},
+ {id:"climb",name:"Back Climb",reps:"Hold 30 s → build to 60 s",timer:30,steps:["Hands behind the back; hold the affected-side hand with the other hand.","Slowly slide the hands up the center of the back as far as comfortable.","Tightness near the incision? Stop there and deep-breathe; slide higher only if it eases.","Hold the top position 30 seconds (use the timer), then slowly lower."],tip:""},
+ {id:"neck",name:"Hands Behind Neck",reps:"Hold 30 s → build to 60 s",timer:30,steps:["First few times: lie on your back, pillow under the head (a rolled towel along the spine helps open the chest).","Hands together on the lap → raise them toward the head, elbows together in front. Keep the head level.","Slide hands over the head to the back of the neck, then spread the elbows out.","Hold the highest comfortable position 30 seconds — keep breathing — then bring elbows together and lower."],tip:"Once comfortable lying down, this can be done sitting or standing."},
+ {id:"sidewall",name:"Side Wall Crawls",reps:"5 times → build to 10 · needs 2 tape pieces",steps:["Stand with the unaffected side about 1 foot from the wall. Reach up with the unaffected arm and mark the height with tape — that's the goal.","Turn so the affected side faces the wall (only the side of the body faces it — don't rotate toward the wall).","Crawl the fingers up the wall as far as comfortable; at a good stretch (not pain), deep-breathe.","Crawl back down. Repeat 5 times; on the last crawl, tape the highest point reached to track progress."],tip:"Surgery on both sides? Do both arms."},
+ {id:"fwdwall",name:"Forward Wall Crawls",reps:"5 times → build to 10 · needs 2 tape pieces",steps:["Face the wall, toes about 6 inches away. Mark a goal height with the unaffected arm.","Both hands on the wall; crawl fingers up, keeping hands even. Don't look up or arch the back.","At a good stretch, deep-breathe; then crawl back down. Repeat 5 times.","Tape the highest point on the last crawl."],tip:"As flexibility improves, step a little closer to the wall to reach higher."}
+];
+const SCAR_INSTR=`<p>Start only when the incision is <strong>fully healed</strong> (no open or scabbed areas) and the nurse says it's safe. Numbness or extra sensitivity at first is normal.</p>
+<ol><li>Place 2–3 fingers over the scar. Gently move the skin in all directions — don't squeeze the breast tissue.</li>
+<li>Lift the fingers, move 1–2 inches around the scar, repeat.</li></ol>
+<p>Once a day, 5–10 minutes.</p>`;
+const SWELL_INSTR=`<p>Some swelling or puffiness in the hand or arm on the surgery side is normal and usually settles on its own. To help:</p>
+<ul><li>Raise the arm above heart level and do <strong>hand pumps</strong> — slowly open and close the fist 10 times — several times a day. Don't hold the arm straight overhead more than a few minutes.</li>
+<li>A few times a day, rest the arm out to the side on pillows (above heart level) for about 20 minutes.</li>
+<li>Sleeping on the unaffected side? Rest the affected arm on a pillow or two.</li></ul>
+<p>If swelling hasn't gone down in 4–6 weeks, call the surgeon or nurse.</p>`;
+const PREP=[["Place most-used items within reach","home"],["Set up a comfortable chair or recliner for sleeping","home"],["Get a wedge pillow for transitioning back to bed","home"],["Start a meal train (or ask a friend to host one)","home"],
+ ["Front-button & loose shirts","hospital bag"],["Yoga pants","hospital bag"],["Pillow for under the arm / seatbelt","hospital bag"],["Slip-on shoes","hospital bag"],["Snacks","hospital bag"],["Phone charger","hospital bag"],
+ ["Drain apron / zip hoodie or button shirt with pockets for drains","post-op"],["Pen & notebook for questions for the doctor","post-op"],["Chair or recliner ready for sleeping","post-op"],["Dry shampoo","post-op"],["Cleansing / shower wipes","post-op"],["Comfortable pajamas","post-op"]];
+
+/* ---------- task engine ---------- */
+function builtinTasks(){
+  const dr=activeDrains().length>0;
+  return [
+    {id:"drain",title:"Empty & log JP drains",sub:"Milk tubing first · log mL and color for each drain",periods:["morning","midday","evening"],show:dr,derived:"drain",postOp:true,instr:INSTR.milk+INSTR.empty+`<p>${extLink(LINKS.drainVideo,"Watch the MSK how-to video")} · ${extLink(LINKS.drainGuide,"Full MSK drain guide")}</p>`},
+    {id:"site",title:"Check drain insertion sites",sub:"Look for redness, swelling, pus, warmth",periods:["morning"],show:dr,postOp:true,instr:INSTR.site},
+    {id:"temp",title:"Take temperature",sub:"Call the care team if 101 °F / 38.3 °C or higher",periods:["morning","evening"],show:true,postOp:true},
+    {id:"ex",title:"Exercise session",sub:"The 10 MSK exercises, in order · tap to open the guided list",periods:["morning","midday","evening"],show:true,derived:"ex",postOp:true},
+    {id:"scar",title:"Scar massage",sub:"5–10 minutes, gentle",periods:["anytime"],show:S.scarOK,postOp:true,instr:SCAR_INSTR}
+  ];
+}
+function medPeriod(t){const h=parseInt(t.split(":")[0],10);return h<12?"morning":(h<17?"midday":"evening");}
+function fmtClock(t){let[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";h=h%12||12;return h+":"+pad(m)+" "+ap;}
+function tasksFor(date){
+  const wk=weekNum(date), preOp=(date<S.surgeryDate)&&!S.testMode, out=[];
+  for(const t of builtinTasks()){
+    const o=S.taskOverrides[t.id]||{};
+    if(o.active===false||!t.show)continue;
+    if(t.postOp&&preOp)continue;
+    out.push({key:t.id,title:o.title||t.title,sub:o.sub||t.sub,periods:o.periods||t.periods,instr:o.instr||t.instr,derived:t.derived,builtin:true});
+  }
+  for(const m of S.meds){
+    if(m.active===false)continue;
+    if(preOp&&!m.preOp)continue;
+    if(m.startDate&&date<m.startDate)continue; if(m.endDate&&date>m.endDate)continue;
+    if(m.startWeek&&wk<m.startWeek)continue; if(m.endWeek&&wk>m.endWeek)continue;
+    const medInstr=(m.instr?`<p><strong>Instructions:</strong> ${esc(m.instr)}</p>`:"")+(m.link?`<p>${extLink(m.link,"Medication info sheet")}</p>`:"");
+    if(m.prn){out.push({key:"med_"+m.id,title:m.name+(m.dose?" — "+m.dose:""),sub:"As needed"+(m.instr?" · "+m.instr:""),periods:["anytime"],med:true,instr:medInstr||undefined});}
+    else for(const t of (m.times||[])){out.push({key:"med_"+m.id+"_"+t,title:m.name+(m.dose?" — "+m.dose:""),sub:fmtClock(t)+(m.instr?" · "+m.instr:""),periods:[medPeriod(t)],med:true,at:t,instr:medInstr||undefined});}
+  }
+  for(const c of S.customTasks){
+    if(c.active===false)continue;
+    if(preOp&&!c.preOp)continue;
+    if(c.startDate&&date<c.startDate)continue; if(c.endDate&&date>c.endDate)continue;
+    if(c.startWeek&&wk<c.startWeek)continue; if(c.endWeek&&wk>c.endWeek)continue;
+    out.push({key:"c_"+c.id,title:c.title,sub:c.sub||"",periods:c.periods&&c.periods.length?c.periods:["anytime"],instr:c.instr?"<p>"+esc(c.instr).replace(/\n/g,"<br>")+"</p>":""});
+  }
+  return out;
+}
+const ckey=(date,task,period)=>date+"|"+task+"|"+period;
+function isDone(date,task,period){
+  if(task==="drain"){const ds=activeDrains();return ds.length>0&&ds.every(d=>S.drainLogs.some(l=>l.date===date&&l.period===period&&l.drainId===d.id));}
+  return !!S.completions[ckey(date,task,period)];
+}
+function completionInfo(date,task,period){
+  if(task==="drain"&&isDone(date,task,period)){
+    const logs=S.drainLogs.filter(l=>l.date===date&&l.period===period);
+    if(logs.length){const last=logs[logs.length-1];return{at:last.at,by:last.by,note:""};}
+  }
+  return S.completions[ckey(date,task,period)];
+}
+
+/* ---------- drain helpers ---------- */
+function drainTotal(date,drainId){return S.drainLogs.filter(l=>l.date===date&&l.drainId===drainId).reduce((s,l)=>s+(+l.ml||0),0);}
+function drainEntry(date,period,drainId){return S.drainLogs.find(l=>l.date===date&&l.period===period&&l.drainId===drainId);}
+function removalReady(drainId){
+  const t=todayStr(), y=dstr(new Date(Date.now()-86400000));
+  const yCount=S.drainLogs.filter(l=>l.date===y&&l.drainId===drainId).length;
+  const tCount=S.drainLogs.filter(l=>l.date===t&&l.drainId===drainId).length;
+  if(yCount>=3&&drainTotal(y,drainId)<=30)return y;
+  if(tCount>=3&&drainTotal(t,drainId)<=30)return t;
+  return null;
+}
+
+/* ---------- rendering ---------- */
+let VIEW="today", EXSESSION="morning", VIEWDATE=todayStr(), CALMONTH=null;
+const TABS=[["today","Today","☀️"],["drains","Drains","💧"],["ex","Exercises","🤸"],["notes","Notes","📝"],["schedule","Schedule","📅"],["more","More","⚙️"]];
+function renderTabs(){
+  $("#tabbar").innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" class="${VIEW===t[0]?"on":""}" aria-label="${t[1]}"><span class="ico">${t[2]}</span>${t[1]}</button>`).join("");
+  $$("#tabbar button").forEach(b=>b.onclick=()=>{if(b.dataset.tab==="today")VIEWDATE=todayStr();VIEW=b.dataset.tab;render();window.scrollTo(0,0);});
+}
+function headerHTML(){
+  const d=dayNum(todayStr()),w=weekNum(todayStr()),tw=totalWeeks();
+  const sub=d<0?`Surgery in ${-d} day${-d===1?"":"s"}`:(w>tw?`Day ${d} · Care schedule complete`:`Day ${d} · Week ${w} of ${tw}`);
+  return `<header class="top"><div class="row"><h1>${esc(S.patient)}&#8217;s Recovery</h1>
+    <button class="whochip" id="whobtn" title="Who's caring right now">🤝 ${esc(me())}</button></div>
+    <div class="daychip">${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span></div></header>`;
+}
+function render(){
+  renderTabs();
+  const app=$("#app");
+  if(!S.setup){app.innerHTML=setupHTML();wireSetup();return;}
+  let body="";
+  if(VIEW==="today")body=todayHTML(VIEWDATE);
+  else if(VIEW==="drains")body=drainsHTML();
+  else if(VIEW==="ex")body=exHTML();
+  else if(VIEW==="notes")body=notesHTML();
+  else if(VIEW==="schedule")body=scheduleTabHTML();
+  else body=moreHTML();
+  app.innerHTML=headerHTML()+body;
+  $("#whobtn").onclick=pickCaregiver;
+  if(VIEW==="today")wireToday(VIEWDATE);
+  else if(VIEW==="drains")wireDrains();
+  else if(VIEW==="ex")wireEx();
+  else if(VIEW==="notes")wireNotes();
+  else if(VIEW==="schedule")wireSchedule();
+  else wireMore();
+  wireMicButtons();
+  ensureIdentity();
+}
+
+/* ---------- setup ---------- */
+function setupHTML(){return `
+  <header class="top"><h1>Recovery Track 💗</h1><div class="daychip">Let's set up the recovery companion — takes one minute.</div></header>
+  <div class="card">
+    <div class="field"><label>Who are we caring for?</label><input id="su-name" value="Mom"></div>
+    <div class="field"><label>Surgery date</label><input id="su-date" type="date" value="${S.surgeryDate}">
+      <div class="muted">Recovery tasks (drains, exercises, meds) unlock on this date. You can change it any time in More, and the schedule updates everywhere.</div></div>
+    <div class="field"><label>Expected end of care <span style="font-weight:400">(optional)</span></label><input id="su-end" type="date" value="${S.careEndDate||''}">
+      <div class="muted">Defaults to 6 weeks after surgery. Sets how long the schedule runs — change it any time.</div></div>
+    <div class="field"><label>How many JP drains does she have?</label>
+      <div class="chips" id="su-drains">${[1,2,3,4].map(n=>`<button class="chip ${n===2?"on":""}" data-n="${n}">${n}</button>`).join("")}</div></div>
+    <div class="divider"></div>
+    <div class="field"><label>Caregivers</label>
+      <div class="muted" style="margin-bottom:6px">Add everyone who'll help care for her. You can add or remove people any time.</div>
+      <div class="chips" id="su-cgs" style="margin-bottom:8px"></div>
+      <div class="rowflex"><input id="su-cgadd" placeholder="Type a name, then Add"><button class="btn sec small" id="su-cgbtn" style="flex:none">Add</button></div>
+    </div>
+    <div class="field"><label>Which one is you? <span style="font-weight:400">(on this phone)</span></label>
+      <div class="chips" id="su-me"></div>
+      <div class="muted">This phone remembers who you are, so anything you check off is signed with your name automatically — no need to pick each time.</div>
+    </div>
+    <button class="btn wide" id="su-go">Start</button>
+  </div>
+  <div class="card flat muted">Instructions inside come from the Memorial Sloan Kettering drain-care and exercise guides and the NBCF prep checklist you provided — including the surgeon's handwritten notes. Everything stays editable in the More tab as her needs change.</div>`;}
+function wireSetup(){
+  let n=2;
+  let cgs=(S.caregivers&&S.caregivers.length&&!(S.caregivers.length===1&&S.caregivers[0]==="Caregiver"))?[...S.caregivers]:[];
+  let mePick=cgs[0]||"";
+  const renderCgs=()=>{
+    $("#su-cgs").innerHTML=cgs.length?cgs.map(c=>`<button class="chip on" data-cg="${esc(c)}">${esc(c)} ✕</button>`).join(""):`<span class="muted">No caregivers added yet.</span>`;
+    $("#su-me").innerHTML=cgs.length?cgs.map(c=>`<button class="chip ${c===mePick?"on":""}" data-me="${esc(c)}">${esc(c)}</button>`).join(""):`<span class="muted">Add a caregiver above first.</span>`;
+    $$("#su-cgs [data-cg]").forEach(b=>b.onclick=()=>{const nm=b.dataset.cg;cgs=cgs.filter(x=>x!==nm);if(mePick===nm)mePick=cgs[0]||"";renderCgs();});
+    $$("#su-me [data-me]").forEach(b=>b.onclick=()=>{mePick=b.dataset.me;renderCgs();});
+  };
+  const addCg=()=>{const v=$("#su-cgadd").value.trim();if(!v)return;if(!cgs.includes(v))cgs.push(v);if(!mePick)mePick=v;$("#su-cgadd").value="";renderCgs();$("#su-cgadd").focus();};
+  $("#su-cgbtn").onclick=addCg;
+  $("#su-cgadd").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addCg();}};
+  renderCgs();
+  $$("#su-drains .chip").forEach(c=>c.onclick=()=>{n=+c.dataset.n;$$("#su-drains .chip").forEach(x=>x.classList.toggle("on",+x.dataset.n===n));});
+  $("#su-go").onclick=()=>{
+    S.patient=$("#su-name").value.trim()||"Mom";
+    S.surgeryDate=$("#su-date").value||todayStr();
+    S.careEndDate=$("#su-end").value||null;
+    const pending=$("#su-cgadd")?$("#su-cgadd").value.trim():"";
+    if(pending&&!cgs.includes(pending)){cgs.push(pending);if(!mePick)mePick=pending;}
+    S.caregivers=cgs.length?cgs:["Caregiver"];
+    setMe(mePick||S.caregivers[0]);
+    S.drains=Array.from({length:n},(_,i)=>({id:"d"+(i+1),label:"JP #"+(i+1),removedOn:null}));
+    S.setup=true;save();render();
+  };
+}
+
+/* ---------- Today ---------- */
+function todayHTML(date){
+  date=date||todayStr();
+  const tasks=tasksFor(date), now=new Date(), isToday=date===todayStr(), isFuture=date>todayStr(), isPreOp=(date<S.surgeryDate)&&!S.testMode;
+  let banners=watchBannerHTML();
+  if(S.testMode)banners=`<div class="banner">🧪 <strong>Test mode</strong> is on — you're previewing recovery tasks before surgery so you can try everything out. Turn it off in <strong>More → Care setup</strong> before real recovery starts.</div>`+banners;
+  if(isPreOp){
+    const days=-dayNum(date);
+    banners+=`<div class="banner">🏥 Surgery is in <strong>${days}</strong> day${days===1?"":"s"} (${fmtDateNice(S.surgeryDate)}). Recovery tasks — drains, exercises, meds — show up here once she's home. <button class="linky" id="go-prep">Open the prep checklist →</button></div>`;
+  }
+  if(isToday)for(const d of activeDrains()){const rd=removalReady(d.id);
+    if(rd)banners+=`<div class="banner good">💧 <strong>${esc(d.label)}</strong> drained ≤30 mL in a day (${fmtDateNice(rd)}). That can mean it's ready to come out — mention it to the surgeon's office (weekdays 9–5).</div>`;}
+  let total=0,done=0,missed=[],secs="";
+  for(const[pid,plabel,startH,endH]of PERIODS){
+    const pt=tasks.filter(t=>t.periods.includes(pid));
+    if(!pt.length)continue;
+    const started=periodStarted(date,pid);
+    const rows=pt.map(t=>{
+      const dn=isDone(date,t.key,pid);total++;if(dn)done++;
+      const ci=dn?completionInfo(date,t.key,pid):null;
+      const dayOver=!isToday&&!isFuture, periodOver=isToday&&now.getHours()>=endH;
+      const overdue=!dn&&(dayOver||periodOver);
+      if(overdue)missed.push(esc(t.title)+" ("+plabel+")");
+      let status;
+      if(dn&&ci)status=`<div class="t-done">✓ ${fmtTime(new Date(ci.at))}${ci.by?" — "+esc(ci.by):""}</div>${ci.note?`<div class="t-note">${esc(ci.note)}</div>`:""}`;
+      else if(!started)status=isFuture?`<div class="t-sub">🔒 Unlocks ${fmtDateNice(date)}, ${plabel.toLowerCase()}</div>`:`<div class="t-sub">🔒 Starts at ${fmtClock(pad(startH)+":00")}</div>`;
+      else if(t.key==="drain"){const ds=activeDrains();const logged=ds.filter(d=>drainEntry(date,pid,d.id)).length;status=`<div class="t-sub">${logged?logged+" of "+ds.length+" drains logged · ":""}${esc(t.sub)}</div>`;}
+      else status=`<div class="t-sub">${esc(t.sub)}</div>`;
+      return `<div class="task ${dn?"done":""} ${overdue?"overdue":""} ${!started?"future":""}" data-task="${esc(t.key)}" data-period="${pid}">
+        <button class="check" aria-label="${dn?"Completed — tap to undo":"Mark done"}" ${!started?"disabled":""}>✓</button>
+        <div class="t-main t-open"><div class="t-title">${esc(t.title)}</div>${status}
+          <div class="instr" style="display:none">${t.instr||""}</div></div>
+        ${t.instr||t.derived?`<button class="chev" aria-label="Details">▸</button>`:""}
+      </div>`;
+    }).join("");
+    secs+=`<div class="sect"><h2>${plabel}</h2></div><div class="card">${rows}</div>`;
+  }
+  const maxDate=careEnd();
+  const nav=`<div class="card flat" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <button class="btn small sec" id="day-prev">‹ Prev</button>
+    <div style="text-align:center"><strong>${isToday?"Today":fmtDateNice(date)}</strong>
+      <div class="muted">Day ${dayNum(date)} · Week ${weekNum(date)} of ${totalWeeks()}${isToday?"":" · "+fmtDateNice(date)}</div></div>
+    <button class="btn small sec" id="day-next" ${date>=maxDate?"disabled":""}>Next ›</button>
+  </div>
+  ${!isToday?`<div class="btnrow" style="margin-top:-6px">
+    <button class="btn small sec" id="day-today">Jump to today</button>
+    <button class="btn small sec" id="see-schedule">See full schedule</button>
+  </div>`:""}
+  ${!isFuture&&speechSupported()?`<div class="btnrow" style="margin-top:-6px"><button class="btn small sec" id="voice-signoff">🎤 Voice sign-off</button></div>`:""}`;
+  if(missed.length)banners=`<div class="banner warn">⚠️ <strong>${missed.length}</strong> ${missed.length===1?"task":"tasks"} not done ${isToday?"yet today":"that day"}: ${missed.join(", ")}</div>`+banners;
+  if(isFuture&&!isPreOp)banners=`<div class="banner">📅 This day hasn't happened yet. You can look ahead — items unlock once their time window starts.</div>`+banners;
+  return `${nav}${banners}${aiSummaryCardHTML(date)}
+  ${!isPreOp?`<div class="card flat" style="display:flex;justify-content:space-between;align-items:center">
+    <div><strong class="num">${done} of ${total}</strong> <span class="muted">tasks done${isToday?" today":""}</span></div>
+    <span class="pill ${done===total&&total>0?"good":"plain"}">${done===total&&total>0?"All done 🎉":"In progress"}</span></div>`:""}
+  ${secs}
+  <details class="card flat"><summary style="color:var(--alert)">🚩 When to call the doctor</summary><div class="instr">${INSTR.redflags}</div></details>`;
+}
+function wireToday(date){
+  date=date||todayStr();
+  $("#day-prev").onclick=()=>{VIEWDATE=dstr(new Date(parseD(date).getTime()-86400000));render();};
+  const nx=$("#day-next");if(nx)nx.onclick=()=>{VIEWDATE=dstr(new Date(parseD(date).getTime()+86400000));render();};
+  const jt=$("#day-today");if(jt)jt.onclick=()=>{VIEWDATE=todayStr();render();};
+  const ss=$("#see-schedule");if(ss)ss.onclick=()=>{VIEW="schedule";render();};
+  const gp=$("#go-prep");if(gp)gp.onclick=()=>{VIEW="more";render();};
+  const vsb=$("#voice-signoff");if(vsb)vsb.onclick=()=>voiceSignoffSheet(date);
+  wireAiSummary(date);
+  $$(".task").forEach(row=>{
+    const task=row.dataset.task, period=row.dataset.period;
+    if(row.classList.contains("future"))return;
+    row.querySelector(".check").onclick=(e)=>{e.stopPropagation();toggleTask(task,period,date);};
+    const openTarget=()=>{
+      if(task==="drain"){VIEW="drains";render();return;}
+      if(task==="ex"){VIEW="ex";EXSESSION=period;render();return;}
+      const ins=row.querySelector(".instr");if(ins&&ins.innerHTML.trim()){const show=ins.style.display==="none";ins.style.display=show?"":"none";const ch=row.querySelector(".chev");if(ch)ch.textContent=show?"▾":"▸";}
+    };
+    row.querySelector(".t-open").onclick=openTarget;
+    const ch=row.querySelector(".chev");if(ch)ch.onclick=openTarget;
+  });
+}
+function toggleTask(task,period,date){
+  date=date||todayStr();
+  if(task==="drain"){VIEW="drains";render();return;}
+  if(isDone(date,task,period)){
+    if(confirm("Un-mark this task?")){delete S.completions[ckey(date,task,period)];save();render();}
+    return;
+  }
+  completeSheet(task,period,date);
+}
+function completeSheet(task,period,date,titleOverride){
+  date=date||todayStr();
+  const t=tasksFor(date).find(x=>x.key===task);
+  const title=titleOverride||(t?t.title:"Task");
+  let by=me();
+  openSheet(`<h3>Done: ${esc(title)}</h3>
+    ${date!==todayStr()?`<p class="muted">Logging for ${fmtDateNice(date)}</p>`:""}
+    <div class="field"><label>Signed off by</label>${caregiverChipsHTML("cs-who",by)}</div>
+    <div class="field"><label>Note for the next caregiver <span style="font-weight:400">(optional)</span></label>
+    <textarea id="cs-note" placeholder="e.g. She was drowsy after this dose · pain 3/10 · left drain looked cloudy"></textarea>
+    ${micButtonHTML("cs-note")}</div>
+    <div class="btnrow"><button class="btn" id="cs-save">Mark done ✓</button><button class="btn sec" id="cs-cancel">Cancel</button></div>`);
+  wireCaregiverChips("cs-who",n=>by=n);
+  $("#cs-cancel").onclick=closeSheet;
+  $("#cs-save").onclick=()=>{
+    const note=$("#cs-note").value.trim();
+    S.completions[ckey(date,task,period)]={at:Date.now(),by,note};
+    if(note)S.notes.unshift({id:uid(),at:Date.now(),by,text:"["+title+"] "+note,pinned:false,auto:true});
+    save();closeSheet();render();
+  };
+}
+
+/* ---------- Drains ---------- */
+function drainsHTML(){
+  const date=todayStr(), y=dstr(new Date(Date.now()-86400000));
+  let cards="";
+  for(const d of S.drains){
+    if(d.removedOn){cards+=`<div class="card"><strong>${esc(d.label)}</strong> <span class="pill plain">removed ${fmtDateNice(d.removedOn)}</span>
+      <div class="btnrow"><button class="btn small sec" data-unrem="${d.id}">Undo removal</button></div></div>`;continue;}
+    const rd=removalReady(d.id);
+    const cells=PERIODS.slice(0,3).map(([pid,pl])=>{
+      const e=drainEntry(date,pid,d.id);
+      return `<button class="dcell ${e?"filled":""}" data-log="${d.id}" data-period="${pid}">
+        <span class="lbl">${pl}</span>
+        ${e?`<span class="val num">${esc(e.ml)} mL</span><span class="clr">${esc(e.color||"")}${e.by?" · "+esc(e.by):""}</span>`:`<span class="val" style="color:var(--ink2)">+</span><span class="clr">tap to log</span>`}
+      </button>`;
+    }).join("");
+    cards+=`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${esc(d.label)}</strong>
+        ${rd?`<span class="pill good">≤30 mL/24h — ask about removal</span>`:`<span class="pill plain num">today ${drainTotal(date,d.id)} mL · yest ${drainTotal(y,d.id)} mL</span>`}
+      </div>
+      <div class="dgrid">${cells}</div>
+      <div class="btnrow"><button class="btn small sec" data-rem="${d.id}">Mark removed</button></div>
+    </div>`;
+  }
+  const hist=historyTable();
+  return `<div class="sect"><h2>Today's drain log</h2><div class="meta">${fmtDateNice(date)}</div></div>
+  ${cards}
+  <div class="sect"><h2>Last 14 days</h2><div class="meta">daily totals, mL</div></div>
+  <div class="card scrollx">${hist}</div>
+  <div class="sect"><h2>How-to</h2></div>
+  <div class="card flat">
+    <details><summary>1 · Milk the tubing, then empty & measure</summary><div class="instr">${INSTR.milk}${INSTR.empty}</div></details>
+    <details><summary>2 · Insertion-site care</summary><div class="instr">${INSTR.site}</div></details>
+    <details><summary>3 · Common problems</summary><div class="instr">${INSTR.problems}</div></details>
+    <details><summary>4 · After a drain is removed</summary><div class="instr">${INSTR.removal}</div></details>
+    <details><summary style="color:var(--alert)">🚩 When to call</summary><div class="instr">${INSTR.redflags}</div></details>
+  </div>`;
+}
+function historyTable(){
+  const days=[];for(let i=0;i<14;i++)days.push(dstr(new Date(Date.now()-i*86400000)));
+  const cols=S.drains;
+  const rows=days.map(dt=>{
+    const anyv=cols.some(c=>S.drainLogs.some(l=>l.date===dt&&l.drainId===c.id));
+    if(!anyv&&dt!==todayStr())return "";
+    return `<tr><td>${fmtDateNice(dt)}</td>${cols.map(c=>{
+      const v=drainTotal(dt,c.id),has=S.drainLogs.some(l=>l.date===dt&&l.drainId===c.id);
+      return `<td class="num">${has?v:"—"}</td>`;}).join("")}</tr>`;
+  }).join("");
+  return `<table><thead><tr><th>Date</th>${cols.map(c=>`<th>${esc(c.label)}${c.removedOn?" ✕":""}</th>`).join("")}</tr></thead><tbody>${rows||"<tr><td colspan='9' class='muted'>No entries yet</td></tr>"}</tbody></table>`;
+}
+function wireDrains(){
+  $$("[data-log]").forEach(b=>b.onclick=()=>drainSheet(b.dataset.log,b.dataset.period));
+  $$("[data-rem]").forEach(b=>b.onclick=()=>{
+    const d=S.drains.find(x=>x.id===b.dataset.rem);
+    if(confirm("Mark "+d.label+" as removed by the care team today?")){d.removedOn=todayStr();save();render();}
+  });
+  $$("[data-unrem]").forEach(b=>b.onclick=()=>{const d=S.drains.find(x=>x.id===b.dataset.unrem);d.removedOn=null;save();render();});
+}
+function drainSheet(drainId,period){
+  const d=S.drains.find(x=>x.id===drainId), date=todayStr();
+  const ex=drainEntry(date,period,drainId);
+  let color=ex?ex.color:"Pale yellow", by=ex?ex.by:me();
+  openSheet(`<h3>${esc(d.label)} — ${PLABEL[period]}</h3>
+    <div class="field"><label>Amount (mL)</label><input id="dl-ml" type="number" inputmode="decimal" min="0" max="500" value="${ex?esc(ex.ml):""}" placeholder="e.g. 25"></div>
+    <div class="field"><label>Color</label><div class="chips" id="dl-color">${DRAIN_COLORS.map(c=>`<button class="chip ${c===color?"on":""}">${c}</button>`).join("")}</div></div>
+    <div class="field"><label>Signed off by</label>${caregiverChipsHTML("dl-who",by)}</div>
+    <div class="field"><label>Note (optional)</label><input id="dl-note" value="${ex?esc(ex.note||""):""}" placeholder="e.g. small clots, milked tubing">${micButtonHTML("dl-note")}</div>
+    <div class="btnrow"><button class="btn" id="dl-save">Save</button>${ex?`<button class="btn danger" id="dl-del">Delete</button>`:""}<button class="btn sec" id="dl-cancel">Cancel</button></div>`);
+  $$("#dl-color .chip").forEach(c=>c.onclick=()=>{color=c.textContent;$$("#dl-color .chip").forEach(x=>x.classList.toggle("on",x.textContent===color));});
+  wireCaregiverChips("dl-who",n=>by=n);
+  $("#dl-cancel").onclick=closeSheet;
+  if(ex)$("#dl-del").onclick=()=>{if(confirm("Delete this entry?")){S.drainLogs=S.drainLogs.filter(l=>l!==ex);save();closeSheet();render();}};
+  $("#dl-save").onclick=()=>{
+    const ml=parseFloat($("#dl-ml").value);
+    if(isNaN(ml)||ml<0){alert("Enter the amount in mL.");return;}
+    const note=$("#dl-note").value.trim();
+    if(ex){ex.ml=ml;ex.color=color;ex.by=by;ex.note=note;ex.at=Date.now();}
+    else S.drainLogs.push({id:uid(),date,period,drainId,ml,color,by,note,at:Date.now()});
+    save();closeSheet();render();
+  };
+}
+
+/* ---------- Exercises ---------- */
+function exkey(date,session,exId){return date+"|"+session+"|"+exId;}
+function exHTML(){
+  const date=todayStr();
+  const sesBtns=PERIODS.slice(0,3).map(([pid,pl])=>{
+    const dn=isDone(date,"ex",pid);
+    return `<button class="chip ${EXSESSION===pid?"on":""}" data-ses="${pid}">${pl}${dn?" ✓":""}</button>`;
+  }).join("");
+  const doneCt=EXERCISES.filter(e=>S.exItems[exkey(date,EXSESSION,e.id)]).length;
+  const sesDone=isDone(date,"ex",EXSESSION);
+  const sesInfo=sesDone?S.completions[ckey(date,"ex",EXSESSION)]:null;
+  const items=EXERCISES.map((e,i)=>{
+    const dn=!!S.exItems[exkey(date,EXSESSION,e.id)];
+    return `<div class="exitem ${dn?"done":""}">
+      <button class="exnum" data-ex="${e.id}" aria-label="${dn?"Done":"Mark done"}">${dn?"✓":i+1}</button>
+      <div class="t-main">
+        <div class="t-title" style="${dn?"color:var(--ink2)":""}">${e.name}</div>
+        <div class="t-sub">${e.reps}</div>
+        <details><summary class="linky" style="font-size:13px">Steps</summary><div class="instr">
+          <ol>${e.steps.map(s=>`<li>${s}</li>`).join("")}</ol>${e.tip?`<p>💡 ${e.tip}</p>`:""}
+          ${e.timer?`<button class="btn small sec" data-timer="${e.timer}" data-timername="${e.name}">⏱ Start ${e.timer}-second hold timer</button>`:""}
+        </div></details>
+      </div></div>`;
+  }).join("");
+  return `<div class="sect"><h2>Exercise sessions</h2><div class="meta">3× a day</div></div>
+  <div class="card flat"><div class="chips">${sesBtns}</div></div>
+  <div class="banner ${sesDone?"good":"warn"}">${sesDone?`✓ ${PLABEL[EXSESSION]} session done — lovely work.`:`${PLABEL[EXSESSION]} session: <strong class="num">${doneCt}/${EXERCISES.length}</strong> exercises. Do them in order; stop at pain (gentle stretch is OK).`}</div>
+  ${sesInfo?`<p class="t-done" style="margin:-6px 0 10px">Signed off by <strong>${esc(sesInfo.by)}</strong> · ${fmtTime(new Date(sesInfo.at))}${sesInfo.note?` — “${esc(sesInfo.note)}”`:""}</p>`:""}
+  <div class="card">${items}</div>
+  <div class="btnrow">${sesDone?`<button class="btn sec" id="ex-undo">Un-mark session</button>`:`<button class="btn wide" id="ex-doneall">Mark whole session done ✓</button>`}</div>
+  <div class="card flat" style="margin-top:12px">
+    <p class="surgnote">Surgeon's note: no range-of-motion restriction.</p>
+    <p class="muted">Do the exercises in order, 3× a day, until her arm moves the way it did before surgery — then keep going once a day (it prevents scar tissue from limiting movement later). If her shoulder is still hard to move 4 weeks after surgery, tell the surgeon.</p>
+    <p>${extLink(LINKS.exGuide,"Full MSK exercise guide (all 10, with photos)")}</p>
+    <details><summary>Managing hand/arm swelling</summary><div class="instr">${SWELL_INSTR}</div></details>
+    <details><summary>Scar massage ${S.scarOK?"":"(locked until incision healed — enable in More)"}</summary><div class="instr">${SCAR_INSTR}</div></details>
+  </div>`;
+}
+function wireEx(){
+  const date=todayStr();
+  $$("[data-ses]").forEach(b=>b.onclick=()=>{EXSESSION=b.dataset.ses;render();});
+  $$("[data-ex]").forEach(b=>b.onclick=()=>{
+    const k=exkey(date,EXSESSION,b.dataset.ex);
+    if(S.exItems[k])delete S.exItems[k];else S.exItems[k]=true;
+    const all=EXERCISES.every(e=>S.exItems[exkey(date,EXSESSION,e.id)]);
+    if(all&&!S.completions[ckey(date,"ex",EXSESSION)])
+      S.completions[ckey(date,"ex",EXSESSION)]={at:Date.now(),by:me(),note:""};
+    save();render();
+  });
+  $$("[data-timer]").forEach(b=>b.onclick=()=>timerSheet(+b.dataset.timer,b.dataset.timername));
+  const da=$("#ex-doneall");if(da)da.onclick=()=>completeSheet("ex",EXSESSION,date,"Exercise session — "+PLABEL[EXSESSION]);
+  const un=$("#ex-undo");if(un)un.onclick=()=>{if(confirm("Un-mark this session?")){delete S.completions[ckey(todayStr(),"ex",EXSESSION)];save();render();}};
+}
+let TMR=null;
+function timerSheet(secs,name){
+  let total=secs,left=secs,running=false;
+  openSheet(`<h3>⏱ ${esc(name)}</h3>
+    <div class="chips" id="tm-len">${[30,45,60].map(s=>`<button class="chip ${s===secs?"on":""}" data-s="${s}">${s} s</button>`).join("")}</div>
+    <div class="timerbig num" id="tm-val">${secs}</div>
+    <div class="timerbar"><div id="tm-bar"></div></div>
+    <div class="btnrow"><button class="btn" id="tm-start">Start</button><button class="btn sec" id="tm-reset">Reset</button><button class="btn sec" id="tm-close">Close</button></div>
+    <p class="muted">Breathe normally during the hold. A chime sounds when time is up.</p>`,()=>{if(TMR)clearInterval(TMR);TMR=null;});
+  const upd=()=>{$("#tm-val").textContent=left;$("#tm-bar").style.width=(100*(total-left)/total)+"%";};
+  $$("#tm-len .chip").forEach(c=>c.onclick=()=>{total=+c.dataset.s;left=total;running=false;if(TMR)clearInterval(TMR);$("#tm-start").textContent="Start";$$("#tm-len .chip").forEach(x=>x.classList.toggle("on",+x.dataset.s===total));upd();});
+  $("#tm-start").onclick=()=>{
+    if(running){clearInterval(TMR);running=false;$("#tm-start").textContent="Resume";return;}
+    running=true;$("#tm-start").textContent="Pause";
+    TMR=setInterval(()=>{left--;upd();if(left<=0){clearInterval(TMR);running=false;$("#tm-start").textContent="Start";left=total;beep();setTimeout(upd,1200);$("#tm-val").textContent="Done ✓";}},1000);
+  };
+  $("#tm-reset").onclick=()=>{left=total;running=false;if(TMR)clearInterval(TMR);$("#tm-start").textContent="Start";upd();};
+  $("#tm-close").onclick=closeSheet;
+  upd();
+}
+function beep(){
+  try{const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  [0,.25,.5].forEach((t,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);o.frequency.value=660+i*110;g.gain.value=.15;
+    o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.2);});}catch(e){}
+  if(navigator.vibrate)navigator.vibrate([200,100,200]);
+}
+
+/* ---------- Things to watch ---------- */
+function openWatchItems(){return S.watchItems.filter(w=>!w.resolved);}
+function watchBannerHTML(){
+  const open=openWatchItems();
+  if(!open.length)return "";
+  return `<div class="banner warn">👀 <strong>${open.length}</strong> thing${open.length===1?"":"s"} to watch: ${open.map(w=>esc(w.text)).join(" · ")}</div>`;
+}
+function watchRowHTML(w){
+  return `<div class="task ${w.resolved?"done":""}">
+    <button class="check" data-watchtoggle="${w.id}" aria-label="${w.resolved?"Reopen":"Mark resolved"}">✓</button>
+    <div class="t-main"><div class="t-title">${esc(w.text)}</div>
+      <div class="t-sub">Added by ${esc(w.by)} · ${relTime(w.at)}${w.resolved?` · resolved by ${esc(w.resolvedBy)} · ${relTime(w.resolvedAt)}`:""}</div></div>
+    <button class="linky" data-watchdel="${w.id}" style="color:var(--alert)">Delete</button></div>`;
+}
+function watchListHTML(){
+  const open=openWatchItems();
+  const resolved=S.watchItems.filter(w=>w.resolved).sort((a,b)=>(b.resolvedAt||0)-(a.resolvedAt||0)).slice(0,10);
+  return (open.length?open.map(watchRowHTML).join(""):`<p class="muted">Nothing flagged right now.</p>`)
+    + (resolved.length?`<details><summary>Resolved (${resolved.length})</summary>${resolved.map(watchRowHTML).join("")}</details>`:"");
+}
+
+/* ---------- AI day summary ---------- */
+function dayFactsText(date){
+  const tasks=tasksFor(date), lines=[];
+  const y=dstr(new Date(parseD(date).getTime()-86400000));
+  for(const d of S.drains){
+    if(!S.drainLogs.some(l=>l.date===date&&l.drainId===d.id))continue;
+    const t=drainTotal(date,d.id), yTot=drainTotal(y,d.id);
+    lines.push(`${d.label} total: ${t} mL${yTot?` (yesterday ${yTot} mL)`:""}`);
+  }
+  const medGiven=[...new Set(Object.keys(S.completions).filter(k=>k.startsWith(date+"|med_")).map(k=>medLabelFromKey(k.split("|")[1])))];
+  if(medGiven.length)lines.push(`Meds given: ${medGiven.join(", ")}`);
+  const medScheduled=[...new Set(tasks.filter(t=>t.med).map(t=>t.title.split(" — ")[0]))];
+  const medMissed=medScheduled.filter(n=>!medGiven.includes(n));
+  if(medMissed.length)lines.push(`Meds scheduled but not yet logged: ${medMissed.join(", ")}`);
+  if(tasks.some(t=>t.key==="ex")){
+    const exCount=PERIODS.slice(0,3).filter(([pid])=>isDone(date,"ex",pid)).length;
+    lines.push(`Exercise sessions completed: ${exCount} of 3`);
+  }
+  if(tasks.some(t=>t.key==="temp")){
+    const tempCount=PERIODS.filter(([pid])=>S.completions[ckey(date,"temp",pid)]).length;
+    if(tempCount)lines.push(`Temperature checked ${tempCount} time(s)`);
+  }
+  S.notes.filter(n=>dstr(new Date(n.at))===date).forEach(n=>lines.push(`Handoff note from ${n.by}: "${n.text}"`));
+  const open=openWatchItems();
+  if(open.length)lines.push(`Open watch items: ${open.map(w=>w.text).join("; ")}`);
+  return lines.join("\n");
+}
+async function generateDaySummary(date,btn){
+  const facts=dayFactsText(date);
+  if(!facts)return;
+  if(btn){btn.disabled=true;btn.textContent="Thinking…";}
+  try{
+    const res=await fetch(AI_FN_URL,{method:"POST",headers:{apikey:SYNC.key,Authorization:"Bearer "+SYNC.key,"x-app-key":SYNC.key,"content-type":"application/json"},body:JSON.stringify({patient:S.patient,date,facts})});
+    const data=await res.json();
+    if(!res.ok||data.error)throw new Error(data.error||"AI request failed");
+    S.aiSummaries[date]={text:data.summary,at:Date.now(),facts,by:me()};
+    save();render();
+  }catch(e){
+    alert("Couldn't generate the AI summary right now. "+(e.message||"")+"\n\nCheck that the GEMINI_API_KEY secret is set for the daily-summary function in Supabase.");
+    if(btn){btn.disabled=false;btn.textContent="Generate summary ✨";}
+  }
+}
+function aiSummaryCardHTML(date){
+  const facts=dayFactsText(date);
+  if(!facts)return "";
+  const entry=S.aiSummaries[date];
+  if(entry&&entry.facts===facts){
+    return `<div class="card"><div class="sect" style="margin:0 0 8px"><h2 style="font-size:15px">✨ Day summary</h2><span class="pill plain">AI</span></div>
+      <p style="margin:0">${esc(entry.text)}</p>
+      <p class="muted" style="margin-top:8px">Generated ${relTime(entry.at)}${entry.by?" by "+esc(entry.by):""} · <button class="linky" id="ai-regen">Regenerate</button></p></div>`;
+  }
+  if(entry){
+    return `<div class="card"><div class="sect" style="margin:0 0 8px"><h2 style="font-size:15px">✨ Day summary</h2><span class="pill warn">outdated</span></div>
+      <p class="muted" style="margin:0">${esc(entry.text)}</p>
+      <p class="muted" style="margin-top:6px">Data has changed since this was generated.</p>
+      <button class="btn small" id="ai-gen-btn" style="margin-top:6px">Refresh summary ✨</button></div>`;
+  }
+  return `<div class="card"><div class="sect" style="margin:0 0 8px"><h2 style="font-size:15px">✨ Day summary</h2></div>
+    <p class="muted" style="margin:0">Not generated yet.</p>
+    <button class="btn small" id="ai-gen-btn" style="margin-top:6px">Generate summary ✨</button></div>`;
+}
+function wireAiSummary(date){
+  const gb=$("#ai-gen-btn");if(gb)gb.onclick=()=>generateDaySummary(date,gb);
+  const rg=$("#ai-regen");if(rg)rg.onclick=(e)=>generateDaySummary(date,e.target);
+}
+
+/* ---------- Notes ---------- */
+function notesHTML(){
+  const date=todayStr();
+  const glance=glanceHTML(date);
+  const sorted=[...S.notes].sort((a,b)=>(b.pinned-a.pinned)||(b.at-a.at));
+  const feed=sorted.length?sorted.map(n=>`<div class="note ${n.pinned?"pinned":""}">
+      <div class="meta"><span>${n.pinned?"📌 ":""}<strong>${esc(n.by)}</strong> · ${relTime(n.at)}</span>
+        <span><button class="linky" data-pin="${n.id}">${n.pinned?"Unpin":"Pin"}</button> &nbsp;<button class="linky" data-del="${n.id}" style="color:var(--alert)">Delete</button></span></div>
+      <div class="body">${esc(n.text)}</div></div>`).join("")
+    :`<p class="muted">No notes yet. Leave the next caregiver anything they should know — pain levels, what she ate, how she slept, worries.</p>`;
+  return `<div class="sect"><h2>Things to watch</h2><div class="meta">issues & concerns, standing until resolved</div></div>
+  <div class="card">
+    <div class="rowflex"><input id="wi-text" placeholder="e.g. Left drain output higher than right today">${micButtonHTML("wi-text")}</div>
+    <button class="btn wide" id="wi-add" style="margin-top:8px">+ Flag something</button>
+  </div>
+  <div class="card">${watchListHTML()}</div>
+  <div class="sect"><h2>Handoff notes</h2></div>
+  <div class="card">
+    <div class="field"><textarea id="nt-text" placeholder="Note for the next caregiver — how is she doing?"></textarea>${micButtonHTML("nt-text")}</div>
+    <button class="btn wide" id="nt-post">Post as ${esc(me())}</button>
+  </div>
+  <div class="card">${feed}</div>
+  <div class="sect"><h2>General notes</h2><div class="meta">reference info, not tied to any task or day</div></div>
+  <div class="card">
+    <textarea id="gn-text" style="min-height:96px" placeholder="e.g. Surgeon's office: 555-1234 · Post-op appt Aug 5, 2pm · She prefers not to be asked directly about pain level">${esc(S.generalNotes.text||"")}</textarea>
+    ${micButtonHTML("gn-text")}
+    <div class="btnrow"><button class="btn small" id="gn-save">Save</button></div>
+    ${S.generalNotes.by?`<p class="muted" style="margin-top:6px">Last edited by ${esc(S.generalNotes.by)} · ${relTime(S.generalNotes.at)}</p>`:""}
+  </div>
+  <div class="sect"><h2>Today at a glance</h2><div class="meta">auto-summary for handoff</div></div>
+  <div class="card flat">${glance}</div>
+  <div class="sect"><h2>Sign-off log</h2><div class="meta">who did what · last 7 days</div></div>
+  <div class="card">${signoffLogHTML()}</div>`;
+}
+function medLabelFromKey(task){const id=task.split("_")[1];const m=S.meds.find(x=>x.id===id);return m?m.name:"Medication";}
+function taskLabelFromKey(task,period){
+  if(task==="ex")return "Exercise session — "+PLABEL[period];
+  if(task.startsWith("med_"))return medLabelFromKey(task);
+  if(task.startsWith("c_")){const c=S.customTasks.find(x=>"c_"+x.id===task);return c?c.title:"Task";}
+  const b=builtinTasks().find(x=>x.id===task);return b?b.title:task;
+}
+function signoffEntries(days){
+  const cutoff=Date.now()-days*86400000, out=[];
+  for(const[k,v]of Object.entries(S.completions)){
+    if(!v||!v.at||v.at<cutoff)continue;
+    const[date,task,period]=k.split("|");
+    out.push({at:v.at,by:v.by,what:taskLabelFromKey(task,period)+" · "+PLABEL[period]+" · "+fmtDateNice(date),note:v.note});
+  }
+  for(const l of S.drainLogs){
+    if(!l.at||l.at<cutoff)continue;
+    const d=S.drains.find(x=>x.id===l.drainId);
+    out.push({at:l.at,by:l.by,what:(d?d.label:"Drain")+" · "+PLABEL[l.period]+" · "+l.ml+" mL · "+fmtDateNice(l.date),note:l.note});
+  }
+  return out.sort((a,b)=>b.at-a.at);
+}
+function signoffLogHTML(){
+  const entries=signoffEntries(7);
+  if(!entries.length)return `<p class="muted">Nothing signed off yet — as tasks and drains get logged, who-did-what shows up here.</p>`;
+  return entries.map(e=>`<div class="note"><div class="meta"><span><strong>${esc(e.by||"—")}</strong> · ${relTime(e.at)}</span></div>
+    <div class="body">${esc(e.what)}${e.note?` — “${esc(e.note)}”`:""}</div></div>`).join("");
+}
+function glanceHTML(date){
+  const lines=[];
+  for(const d of activeDrains()){
+    const es=PERIODS.slice(0,3).map(([pid,pl])=>{const e=drainEntry(date,pid,d.id);return e?`${pl} ${e.ml} mL`:null;}).filter(Boolean);
+    lines.push(`💧 <strong>${esc(d.label)}</strong>: ${es.length?es.join(" · ")+` — total <span class="num">${drainTotal(date,d.id)} mL</span>`:"not logged yet"}`);
+  }
+  const meds=Object.entries(S.completions).filter(([k])=>k.startsWith(date+"|med_"));
+  lines.push(meds.length?`💊 Meds given: ${meds.map(([k,v])=>{const t=k.split("|")[1];const m=S.meds.find(x=>t.startsWith("med_"+x.id));return (m?esc(m.name):"med")+" at "+fmtTime(new Date(v.at));}).join(", ")}`:"💊 No meds logged yet today");
+  const ex=PERIODS.slice(0,3).filter(([pid])=>isDone(date,"ex",pid)).map(([,pl])=>pl);
+  lines.push(`🤸 Exercise sessions done: ${ex.length?ex.join(", "):"none yet"}`);
+  const temps=PERIODS.filter(([pid])=>S.completions[ckey(date,"temp",pid)]).map(([,pl])=>pl);
+  if(temps.length)lines.push(`🌡 Temperature checked: ${temps.join(", ")}`);
+  return lines.map(l=>`<p style="margin:6px 0">${l}</p>`).join("");
+}
+function relTime(t){
+  const s=(Date.now()-t)/1000;
+  if(s<90)return "just now"; if(s<3600)return Math.round(s/60)+" min ago";
+  if(s<86400)return Math.round(s/3600)+" hr ago";
+  return new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"})+" "+fmtTime(new Date(t));
+}
+function wireNotes(){
+  $("#nt-post").onclick=()=>{
+    const txt=$("#nt-text").value.trim();if(!txt)return;
+    S.notes.unshift({id:uid(),at:Date.now(),by:me(),text:txt,pinned:false});
+    save();render();
+  };
+  $$("[data-pin]").forEach(b=>b.onclick=()=>{const n=S.notes.find(x=>x.id===b.dataset.pin);n.pinned=!n.pinned;save();render();});
+  $$("[data-del]").forEach(b=>b.onclick=()=>{if(confirm("Delete this note?")){S.notes=S.notes.filter(x=>x.id!==b.dataset.del);save();render();}});
+  $("#wi-add").onclick=()=>{
+    const txt=$("#wi-text").value.trim();if(!txt)return;
+    S.watchItems.unshift({id:uid(),text:txt,by:me(),at:Date.now(),resolved:false});
+    save();render();
+  };
+  $$("[data-watchtoggle]").forEach(b=>b.onclick=()=>{
+    const w=S.watchItems.find(x=>x.id===b.dataset.watchtoggle);
+    if(w.resolved){w.resolved=false;w.resolvedBy=null;w.resolvedAt=null;}
+    else{w.resolved=true;w.resolvedBy=me();w.resolvedAt=Date.now();}
+    save();render();
+  });
+  $$("[data-watchdel]").forEach(b=>b.onclick=()=>{if(confirm("Delete this flagged item?")){S.watchItems=S.watchItems.filter(x=>x.id!==b.dataset.watchdel);save();render();}});
+  $("#gn-save").onclick=()=>{
+    S.generalNotes={text:$("#gn-text").value.trim(),by:me(),at:Date.now()};
+    save();render();
+  };
+}
+
+/* ---------- Schedule (derived live from surgery date, end-of-care date & task dates) ---------- */
+function itemStart(a){return a.startDate||(a.startWeek?dstr(new Date(parseD(S.surgeryDate).getTime()+(a.startWeek-1)*7*86400000)):S.surgeryDate);}
+function itemEnd(a){return a.endDate||(a.endWeek?dstr(new Date(parseD(S.surgeryDate).getTime()+(a.endWeek*7-1)*86400000)):careEnd());}
+function scheduleHTML(){
+  const curWk=weekNum(todayStr()), noDrains=activeDrains().length===0, tw=totalWeeks(), hardEnd=parseD(careEnd());
+  const cards=[];
+  for(let w=1;w<=tw;w++){
+    const start=new Date(parseD(S.surgeryDate).getTime()+(w-1)*7*86400000);
+    let end=new Date(start.getTime()+6*86400000); if(end>hardEnd)end=hardEnd;
+    const sdStr=dstr(start), edStr=dstr(end);
+    const rangeLbl=start.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" – "+end.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    const overlaps=a=>itemStart(a)<=edStr&&itemEnd(a)>=sdStr;
+    const meds=S.meds.filter(m=>m.active!==false&&overlaps(m));
+    const ctasks=S.customTasks.filter(c=>c.active!==false&&overlaps(c));
+    const notes=[];
+    if(!noDrains){notes.push("Drains: milk, empty & log 3×/day. Watch for a drain reaching ≤30 mL in 24h — that's usually when the surgeon removes it.");}
+    else if(w===1)notes.push("Drains out — care shifts to keeping the sites clean per the removal instructions.");
+    notes.push("Exercises 3×/day (drop to once a day once her motion is back to normal).");
+    if(w===4)notes.push("Surgeon's note: if her shoulder is still tight by now, tell the surgeon — she may need PT/OT.");
+    if(w>=4)notes.push("If hand/arm swelling hasn't improved, call the surgeon or nurse.");
+    if(S.scarOK)notes.push("Scar massage, once a day, 5–10 minutes.");
+    cards.push(`<div class="card ${w===curWk?"":"flat"}" style="${w===curWk?"border:1px solid var(--accent)":""}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+        <strong>Week ${w}</strong><span class="muted">${rangeLbl}</span>
+        ${w===curWk?`<span class="pill good">current</span>`:w<curWk?`<span class="pill plain">past</span>`:""}
+      </div>
+      ${notes.map(n=>`<div class="t-sub" style="margin-top:4px">• ${n}</div>`).join("")}
+      ${meds.length?`<div class="t-sub" style="margin-top:6px"><strong>Meds:</strong> ${meds.map(m=>esc(m.name)).join(", ")}</div>`:""}
+      ${ctasks.length?`<div class="t-sub"><strong>Extra tasks:</strong> ${ctasks.map(c=>esc(c.title)).join(", ")}</div>`:""}
+    </div>`);
+  }
+  return cards.join("");
+}
+function calendarHTML(){
+  if(!CALMONTH){const t=parseD(todayStr());CALMONTH=t.getFullYear()+"-"+pad(t.getMonth()+1);}
+  const [yy,mm]=CALMONTH.split("-").map(Number);
+  const first=new Date(yy,mm-1,1), startDow=first.getDay(), dim=new Date(yy,mm,0).getDate();
+  const monthLbl=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const dows=["S","M","T","W","T","F","S"].map(d=>`<div class="cal-dow">${d}</div>`).join("");
+  let cells="";
+  for(let i=0;i<startDow;i++)cells+=`<div class="cal-cell empty"></div>`;
+  for(let day=1;day<=dim;day++){
+    const ds=yy+"-"+pad(mm)+"-"+pad(day);
+    const isToday=ds===todayStr(), isSurg=ds===S.surgeryDate, inCare=ds>=S.surgeryDate&&ds<=careEnd();
+    const dayDone=Object.keys(S.completions).some(k=>k.startsWith(ds+"|"))||S.drainLogs.some(l=>l.date===ds);
+    const hasTasks=(inCare||S.testMode)&&tasksFor(ds).length>0;
+    let cls="cal-cell"; if(isToday)cls+=" today"; if(!inCare)cls+=" out";
+    let mark="";
+    if(isSurg)mark=`<span class="cal-dot surg"></span>`;
+    else if(dayDone)mark=`<span class="cal-dot done"></span>`;
+    else if(hasTasks)mark=`<span class="cal-dot task"></span>`;
+    cells+=`<button class="${cls}" data-calday="${ds}"><span class="cal-num">${day}</span>${mark||`<span class="cal-dot" style="visibility:hidden"></span>`}</button>`;
+  }
+  return `<div class="card">
+    <div class="cal-head"><button class="btn small sec" id="cal-prev" aria-label="Previous month">‹</button><strong>${monthLbl}</strong><button class="btn small sec" id="cal-next" aria-label="Next month">›</button></div>
+    <div class="cal-grid cal-dows">${dows}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend"><span><span class="cal-dot surg"></span> surgery</span><span><span class="cal-dot task"></span> tasks due</span><span><span class="cal-dot done"></span> logged</span></div>
+    <p class="muted" style="margin:8px 0 0;text-align:center">Tap any day to open it.</p>
+  </div>`;
+}
+function scheduleTabHTML(){
+  return `<div class="sect"><h2>Calendar</h2><div class="meta">${fmtDateNice(S.surgeryDate)} – ${fmtDateNice(careEnd())}</div></div>
+  ${calendarHTML()}
+  <div class="sect"><h2>Weekly schedule</h2><div class="meta">recomputes from tasks & dates</div></div>
+  <p class="muted" style="margin:-4px 0 8px">Flows from the surgery date, end-of-care date, and your meds & tasks — change any of those in More and this updates automatically.</p>
+  ${scheduleHTML()}`;
+}
+function wireSchedule(){
+  $$("[data-calday]").forEach(b=>b.onclick=()=>{VIEWDATE=b.dataset.calday;VIEW="today";render();window.scrollTo(0,0);});
+  const p=$("#cal-prev");if(p)p.onclick=()=>{const[y,m]=CALMONTH.split("-").map(Number);const d=new Date(y,m-2,1);CALMONTH=d.getFullYear()+"-"+pad(d.getMonth()+1);render();};
+  const nx=$("#cal-next");if(nx)nx.onclick=()=>{const[y,m]=CALMONTH.split("-").map(Number);const d=new Date(y,m,1);CALMONTH=d.getFullYear()+"-"+pad(d.getMonth()+1);render();};
+}
+
+/* ---------- More ---------- */
+function moreHTML(){
+  const medRows=S.meds.length?S.meds.map(m=>`<div class="task">
+    <div class="t-main"><div class="t-title" style="${m.active===false?"color:var(--ink2)":""}">${esc(m.name)}${m.dose?" — "+esc(m.dose):""}${m.active===false?" (paused)":""}</div>
+    <div class="t-sub">${m.prn?"As needed":(m.times||[]).map(fmtClock).join(" · ")}${m.instr?" · "+esc(m.instr):""}</div>
+    ${m.link?`<div style="margin-top:4px">${extLink(m.link,"Info sheet")}</div>`:""}</div>
+    <button class="linky" data-mededit="${m.id}">Edit</button></div>`).join("")
+    :`<p class="muted">Add her medications from the discharge sheet — each dose time becomes a task on Today with a reminder-style checkbox.</p>`;
+  const taskRows=[...builtinTasks().map(t=>{
+      const o=S.taskOverrides[t.id]||{};
+      return `<div class="task"><div class="t-main"><div class="t-title" style="${o.active===false?"color:var(--ink2)":""}">${esc(o.title||t.title)}${o.active===false?" (off)":""}</div>
+      <div class="t-sub">${(o.periods||t.periods).map(p=>PLABEL[p]).join(" · ")} · built-in</div></div>
+      <button class="linky" data-btedit="${t.id}">Edit</button></div>`;}),
+    ...S.customTasks.map(c=>`<div class="task"><div class="t-main"><div class="t-title" style="${c.active===false?"color:var(--ink2)":""}">${esc(c.title)}${c.active===false?" (off)":""}</div>
+      <div class="t-sub">${(c.periods||["anytime"]).map(p=>PLABEL[p]).join(" · ")}${(c.startDate||c.endDate)?` · ${c.startDate?fmtDateNice(c.startDate):"start"} – ${c.endDate?fmtDateNice(c.endDate):"end"}`:(c.startWeek||c.endWeek?` · weeks ${c.startWeek||1}–${c.endWeek||6}`:"")}</div></div>
+      <button class="linky" data-ctedit="${c.id}">Edit</button></div>`)].join("");
+  const prepDone=Object.values(S.prep).filter(Boolean).length;
+  return `
+  <div class="sect"><h2>Care setup</h2></div>
+  <div class="card">
+    <div class="field"><label>Surgery date</label><input id="st-date" type="date" value="${S.surgeryDate}">
+      <div class="muted">The schedule, the Day/Week counter, and every task's default dates all flow from this.</div></div>
+    <div class="field"><label>End of care</label><input id="st-end" type="date" value="${S.careEndDate||''}">
+      <div class="muted">When recovery wraps up — sets how many weeks the schedule runs. Leave blank for the 6-week default (${fmtDateNice(careEnd())}).</div></div>
+    <div class="field"><label>Patient name</label><input id="st-name" value="${esc(S.patient)}"></div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">Scar massage unlocked
+      <input type="checkbox" id="st-scar" style="width:auto;transform:scale(1.4)" ${S.scarOK?"checked":""}></label>
+      <div class="muted">Turn on once the incision is fully healed and the nurse says it's safe. Adds a daily scar-massage task.</div></div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">🧪 Test mode — preview before surgery
+      <input type="checkbox" id="st-test" style="width:auto;transform:scale(1.4)" ${S.testMode?"checked":""}></label>
+      <div class="muted">Turn on to try drains, exercises, meds and the AI day summary right now, before the surgery date. Turn it off before real recovery starts so pre-op days stay clear.</div></div>
+    <button class="btn" id="st-save">Save setup</button>
+  </div>
+
+  <div class="sect"><h2>Prep checklist</h2><div class="meta num">${prepDone}/${PREP.length}</div></div>
+  <div class="card">${PREP.map((p,i)=>`<div class="task ${S.prep[i]?"done":""}">
+    <button class="check" data-prep="${i}">✓</button>
+    <div class="t-main"><div class="t-title">${p[0]}</div><div class="t-sub">${p[1]}</div></div></div>`).join("")}</div>
+
+  <div class="sect"><h2>Caregivers</h2><div class="meta">everyone helping</div></div>
+  <div class="card">
+    <div class="chips" style="margin-bottom:10px">${S.caregivers.map(c=>`<button class="chip" data-cgview="${esc(c)}">${esc(c)}</button>`).join("")||'<span class="muted">No caregivers yet.</span>'}</div>
+    <div class="rowflex"><input id="cg-add" placeholder="Add a caregiver's name"><button class="btn sec small" id="cg-addbtn" style="flex:none">Add</button></div>
+    <p class="muted" style="margin-top:8px">Tap a name to rename or remove. Each phone picks who they are (from the 🤝 button up top), so sign-offs are attributed automatically.</p>
+  </div>
+
+  <div class="sect"><h2>Medications</h2></div>
+  <div class="card">${medRows}<div class="btnrow"><button class="btn small" id="med-add">+ Add medication</button></div></div>
+
+  <div class="sect"><h2>Tasks</h2><div class="meta">start &amp; end dates · edit as needs change</div></div>
+  <div class="card">${taskRows}<div class="btnrow"><button class="btn small" id="task-add">+ Add custom task</button></div></div>
+
+  <div class="sect"><h2>Data</h2></div>
+  <div class="card">
+    <div class="btnrow"><button class="btn sec" id="dt-export">Export / back up</button><button class="btn sec" id="dt-import">Import</button><button class="btn danger" id="dt-reset">Reset everything</button></div>
+    <p class="muted" style="margin-top:10px">Everything syncs automatically to the shared care log — every caregiver's phone sees the same tasks, drain totals, and notes. Export makes a backup copy; Import restores one.</p>
+  </div>
+  <p class="muted" style="text-align:center;margin:16px 0">Instructions adapted from Memorial Sloan Kettering's “Caring for Your Jackson-Pratt Drain” and “Exercises After Your Mastectomy” guides (including the surgeon's handwritten notes) and the NBCF prep checklist. This app is a helper, not medical advice — when unsure, call the care team.</p>`;
+}
+function wireMore(){
+  $("#med-add").onclick=()=>medSheet(null);
+  $$("[data-mededit]").forEach(b=>b.onclick=()=>medSheet(S.meds.find(m=>m.id===b.dataset.mededit)));
+  $("#task-add").onclick=()=>taskSheet(null);
+  $$("[data-ctedit]").forEach(b=>b.onclick=()=>taskSheet(S.customTasks.find(c=>c.id===b.dataset.ctedit)));
+  $$("[data-btedit]").forEach(b=>b.onclick=()=>builtinSheet(b.dataset.btedit));
+  $("#st-save").onclick=()=>{
+    S.patient=$("#st-name").value.trim()||S.patient;
+    S.surgeryDate=$("#st-date").value||S.surgeryDate;
+    S.careEndDate=$("#st-end").value||null;
+    S.scarOK=$("#st-scar").checked;
+    S.testMode=$("#st-test").checked;
+    save();render();
+  };
+  const cgAddBtn=$("#cg-addbtn");if(cgAddBtn)cgAddBtn.onclick=()=>{const v=($("#cg-add").value||"").trim();if(!v)return;if(!S.caregivers.includes(v))S.caregivers.push(v);save();render();};
+  const cgAddIn=$("#cg-add");if(cgAddIn)cgAddIn.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#cg-addbtn").click();}};
+  $$("[data-cgview]").forEach(b=>b.onclick=()=>caregiverEditSheet(b.dataset.cgview));
+  $$("[data-prep]").forEach(b=>b.onclick=()=>{S.prep[b.dataset.prep]=!S.prep[b.dataset.prep];save();render();});
+  $("#dt-export").onclick=exportSheet;
+  $("#dt-import").onclick=importSheet;
+  $("#dt-reset").onclick=async()=>{
+    if(!confirm(SYNC.url?"Erase ALL data — schedule, logs, notes — for EVERY caregiver on the shared care log? This can't be undone.":"Erase ALL data on this phone — schedule, logs, notes? This can't be undone."))return;
+    if(!confirm("Really erase everything?"))return;
+    if(SYNC.url){try{await sreq("DELETE","/rest/v1/"+SYNC.table+"?id=not.is.null");}catch(e){alert("Couldn't reach the shared log — try again when online.");return;}}
+    lastSnap={};localStorage.removeItem(KEY);load();render();
+  };
+}
+function medSheet(m){
+  const isNew=!m;
+  openSheet(`<h3>${isNew?"Add medication":"Edit medication"}</h3>
+    <div class="field"><label>Name</label><input id="md-name" value="${m?esc(m.name):""}" placeholder="e.g. Oxycodone"></div>
+    <div class="field"><label>Dose</label><input id="md-dose" value="${m?esc(m.dose||""):""}" placeholder="e.g. 5 mg, 1 tablet"></div>
+    <div class="field"><label>Times (comma-separated, 24-hour)</label><input id="md-times" value="${m?esc((m.times||[]).join(", ")):""}" placeholder="e.g. 08:00, 14:00, 20:00"></div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">As-needed (PRN) — no fixed times
+      <input type="checkbox" id="md-prn" style="width:auto;transform:scale(1.4)" ${m&&m.prn?"checked":""}></label></div>
+    <div class="field"><label>Instructions (optional)</label><input id="md-instr" value="${m?esc(m.instr||""):""}" placeholder="e.g. with food · max 4/day"></div>
+    <div class="field"><label>Info link (optional)</label><input id="md-link" type="url" value="${m?esc(m.link||""):""}" placeholder="e.g. pharmacy leaflet URL"></div>
+    <div class="rowflex"><div class="field" style="flex:1"><label>Start date</label><input id="md-sd" type="date" value="${m&&m.startDate?m.startDate:(m?"":S.surgeryDate)}"></div>
+    <div class="field" style="flex:1"><label>End date</label><input id="md-ed" type="date" value="${m&&m.endDate?m.endDate:(m?"":careEnd())}"></div></div>
+    <div class="muted" style="margin:-6px 0 12px">Defaults to the surgery date through end of care. Narrow it for a med that only runs part of recovery.</div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">Show before surgery too
+      <input type="checkbox" id="md-preop" style="width:auto;transform:scale(1.4)" ${m&&m.preOp?"checked":""}></label>
+      <div class="muted">Off by default — recovery meds stay hidden until the surgery date.</div></div>
+    ${isNew?"":`<div class="field"><label class="rowflex" style="justify-content:space-between">Active
+      <input type="checkbox" id="md-active" style="width:auto;transform:scale(1.4)" ${m.active!==false?"checked":""}></label></div>`}
+    <div class="btnrow"><button class="btn" id="md-save">Save</button>${isNew?"":`<button class="btn danger" id="md-del">Delete</button>`}<button class="btn sec" id="md-cancel">Cancel</button></div>`);
+  $("#md-cancel").onclick=closeSheet;
+  if(!isNew)$("#md-del").onclick=()=>{if(confirm("Delete this medication?")){S.meds=S.meds.filter(x=>x.id!==m.id);save();closeSheet();render();}};
+  $("#md-save").onclick=()=>{
+    const name=$("#md-name").value.trim();if(!name){alert("Give the medication a name.");return;}
+    const prn=$("#md-prn").checked;
+    const times=$("#md-times").value.split(",").map(s=>s.trim()).filter(s=>/^\d{1,2}:\d{2}$/.test(s)).map(s=>{const[h,mm]=s.split(":");return pad(+h)+":"+mm;});
+    if(!prn&&!times.length){alert("Add at least one time (like 08:00), or mark it as-needed.");return;}
+    const rec=m||{id:uid()};
+    Object.assign(rec,{name,dose:$("#md-dose").value.trim(),times,prn,instr:$("#md-instr").value.trim(),link:$("#md-link").value.trim(),startDate:$("#md-sd").value||null,endDate:$("#md-ed").value||null,preOp:$("#md-preop").checked,active:isNew?true:$("#md-active").checked});
+    if(isNew)S.meds.push(rec);
+    save();closeSheet();render();
+  };
+}
+function periodPicker(sel){
+  return `<div class="chips" id="tp-periods">${PERIODS.map(([pid,pl])=>`<button class="chip ${sel.includes(pid)?"on":""}" data-p="${pid}">${pl}</button>`).join("")}</div>`;
+}
+function taskSheet(c){
+  const isNew=!c; const sel=c&&c.periods?[...c.periods]:["anytime"];
+  openSheet(`<h3>${isNew?"Add custom task":"Edit task"}</h3>
+    <div class="field"><label>Task</label><input id="tk-title" value="${c?esc(c.title):""}" placeholder="e.g. Short walk around the block"></div>
+    <div class="field"><label>When</label>${periodPicker(sel)}</div>
+    <div class="field"><label>Details / instructions (optional)</label><textarea id="tk-instr">${c?esc(c.instr||""):""}</textarea></div>
+    <div class="rowflex"><div class="field" style="flex:1"><label>Start date</label><input id="tk-sd" type="date" value="${c&&c.startDate?c.startDate:(c?"":S.surgeryDate)}"></div>
+    <div class="field" style="flex:1"><label>End date</label><input id="tk-ed" type="date" value="${c&&c.endDate?c.endDate:(c?"":careEnd())}"></div></div>
+    <div class="muted" style="margin:-6px 0 12px">Defaults to the surgery date through end of care. Adjust for a task that only applies part of the time.</div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">Show before surgery too
+      <input type="checkbox" id="tk-preop" style="width:auto;transform:scale(1.4)" ${c&&c.preOp?"checked":""}></label>
+      <div class="muted">Off by default — recovery tasks stay hidden until the surgery date.</div></div>
+    ${isNew?"":`<div class="field"><label class="rowflex" style="justify-content:space-between">Active
+      <input type="checkbox" id="tk-active" style="width:auto;transform:scale(1.4)" ${c.active!==false?"checked":""}></label></div>`}
+    <div class="btnrow"><button class="btn" id="tk-save">Save</button>${isNew?"":`<button class="btn danger" id="tk-del">Delete</button>`}<button class="btn sec" id="tk-cancel">Cancel</button></div>`);
+  $$("#tp-periods .chip").forEach(ch=>ch.onclick=()=>{
+    const p=ch.dataset.p,i=sel.indexOf(p);
+    if(i>=0){if(sel.length>1)sel.splice(i,1);}else sel.push(p);
+    $$("#tp-periods .chip").forEach(x=>x.classList.toggle("on",sel.includes(x.dataset.p)));
+  });
+  $("#tk-cancel").onclick=closeSheet;
+  if(!isNew)$("#tk-del").onclick=()=>{if(confirm("Delete this task?")){S.customTasks=S.customTasks.filter(x=>x.id!==c.id);save();closeSheet();render();}};
+  $("#tk-save").onclick=()=>{
+    const title=$("#tk-title").value.trim();if(!title){alert("Give the task a name.");return;}
+    const rec=c||{id:uid()};
+    Object.assign(rec,{title,periods:[...sel],instr:$("#tk-instr").value.trim(),
+      startDate:$("#tk-sd").value||null,endDate:$("#tk-ed").value||null,preOp:$("#tk-preop").checked,
+      active:isNew?true:$("#tk-active").checked});
+    if(isNew)S.customTasks.push(rec);
+    save();closeSheet();render();
+  };
+}
+function builtinSheet(id){
+  const t=builtinTasks().find(x=>x.id===id); const o=S.taskOverrides[id]||{};
+  const sel=[...(o.periods||t.periods)];
+  openSheet(`<h3>Edit: ${esc(o.title||t.title)}</h3>
+    <div class="field"><label>Title</label><input id="bt-title" value="${esc(o.title||t.title)}"></div>
+    <div class="field"><label>When</label>${periodPicker(sel)}</div>
+    <div class="field"><label class="rowflex" style="justify-content:space-between">Active
+      <input type="checkbox" id="bt-active" style="width:auto;transform:scale(1.4)" ${o.active===false?"":"checked"}></label>
+      <div class="muted">Turn off to hide this task (e.g. once the surgeon says exercises can drop to once a day, or drains are out).</div></div>
+    <div class="btnrow"><button class="btn" id="bt-save">Save</button><button class="btn sec" id="bt-restore">Restore default</button><button class="btn sec" id="bt-cancel">Cancel</button></div>`);
+  $$("#tp-periods .chip").forEach(ch=>ch.onclick=()=>{
+    const p=ch.dataset.p,i=sel.indexOf(p);
+    if(i>=0){if(sel.length>1)sel.splice(i,1);}else sel.push(p);
+    $$("#tp-periods .chip").forEach(x=>x.classList.toggle("on",sel.includes(x.dataset.p)));
+  });
+  $("#bt-cancel").onclick=closeSheet;
+  $("#bt-restore").onclick=()=>{delete S.taskOverrides[id];save();closeSheet();render();};
+  $("#bt-save").onclick=()=>{
+    S.taskOverrides[id]={title:$("#bt-title").value.trim()||t.title,periods:[...sel],active:$("#bt-active").checked};
+    save();closeSheet();render();
+  };
+}
+function exportSheet(){
+  const data=JSON.stringify(S);
+  openSheet(`<h3>Export / back up</h3>
+    <p class="muted">Copy this and keep it somewhere safe (or paste it into Import on another phone).</p>
+    <textarea id="ex-data" style="min-height:140px;font-size:12px" readonly>${esc(data)}</textarea>
+    <div class="btnrow"><button class="btn" id="ex-copy">Copy to clipboard</button><button class="btn sec" id="ex-close">Close</button></div>`);
+  $("#ex-close").onclick=closeSheet;
+  $("#ex-copy").onclick=async()=>{
+    try{await navigator.clipboard.writeText(data);$("#ex-copy").textContent="Copied ✓";}
+    catch(e){$("#ex-data").select();document.execCommand("copy");$("#ex-copy").textContent="Copied ✓";}
+  };
+}
+function importSheet(){
+  openSheet(`<h3>Import</h3>
+    <p class="muted">Paste an export from another phone. <strong>This replaces everything on this phone.</strong></p>
+    <textarea id="im-data" style="min-height:140px;font-size:12px" placeholder='{"v":1,...}'></textarea>
+    <div class="btnrow"><button class="btn" id="im-go">Import</button><button class="btn sec" id="im-close">Close</button></div>`);
+  $("#im-close").onclick=closeSheet;
+  $("#im-go").onclick=()=>{
+    try{const obj=JSON.parse($("#im-data").value);
+      if(!obj||obj.v!==1)throw 0;
+      S=Object.assign(defaults(),obj);save();closeSheet();render();
+    }catch(e){alert("That doesn't look like a valid export.");}
+  };
+}
+
+/* ---------- voice: dictation + hands-free sign-off ---------- */
+function speechSupported(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function micButtonHTML(targetId){
+  if(!speechSupported())return "";
+  return `<button type="button" class="btn small sec" data-mic="${targetId}" style="margin-top:6px">🎤 Dictate</button>`;
+}
+let activeRecognition=null;
+function wireMicButtons(){
+  $$("[data-mic]").forEach(btn=>{
+    if(btn._micWired)return; btn._micWired=true;
+    btn.onclick=()=>startDictation(btn.dataset.mic,btn);
+  });
+}
+function startDictation(targetId,btn){
+  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Rec)return;
+  if(activeRecognition){activeRecognition.stop();activeRecognition=null;return;}
+  const el=document.getElementById(targetId); if(!el)return;
+  const rec=new Rec(); rec.lang=navigator.language||"en-US"; rec.interimResults=true; rec.continuous=true;
+  const base=el.value?el.value.replace(/\s+$/,"")+" ":"";
+  btn.textContent="⏺ Listening… tap to stop";
+  rec.onresult=(e)=>{
+    let txt=""; for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
+    el.value=(base+txt).trim();
+  };
+  rec.onerror=()=>{btn.textContent="🎤 Dictate";activeRecognition=null;};
+  rec.onend=()=>{btn.textContent="🎤 Dictate";activeRecognition=null;};
+  rec.start();
+  activeRecognition=rec;
+}
+function voiceSignoffSheet(date){
+  date=date||todayStr();
+  if(!speechSupported()){
+    openSheet(`<h3>🎤 Voice sign-off</h3><p class="muted">Voice isn't supported in this browser. Try Chrome on Android or Safari on iPhone.</p><div class="btnrow"><button class="btn sec" id="vs-close">Close</button></div>`);
+    $("#vs-close").onclick=closeSheet; return;
+  }
+  openSheet(`<h3>🎤 Voice sign-off</h3>
+    <p class="muted">Tap the mic and say what got done — like “temperature done, ninety eight point six” or “evening exercises done.”</p>
+    <div style="text-align:center;margin:14px 0"><button class="btn" id="vs-mic" style="width:84px;height:84px;border-radius:50%;font-size:28px">🎤</button></div>
+    <p id="vs-transcript" class="muted" style="min-height:20px;text-align:center"></p>
+    <div id="vs-match"></div>
+    <div class="btnrow"><button class="btn sec" id="vs-close">Close</button></div>`,()=>{if(activeRecognition){activeRecognition.stop();activeRecognition=null;}});
+  $("#vs-close").onclick=closeSheet;
+  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  $("#vs-mic").onclick=()=>{
+    if(activeRecognition){activeRecognition.stop();activeRecognition=null;$("#vs-mic").textContent="🎤";return;}
+    const rec=new Rec(); rec.lang=navigator.language||"en-US"; rec.interimResults=true;
+    $("#vs-mic").textContent="⏺";
+    rec.onresult=(e)=>{
+      let txt=""; for(let i=0;i<e.results.length;i++)txt+=e.results[i][0].transcript;
+      const tEl=$("#vs-transcript"); if(tEl)tEl.textContent="“"+txt+"”";
+      if(e.results[e.results.length-1].isFinal)handleVoiceCommand(txt,date);
+    };
+    rec.onend=()=>{const b=$("#vs-mic");if(b)b.textContent="🎤";activeRecognition=null;};
+    rec.onerror=()=>{const b=$("#vs-mic");if(b)b.textContent="🎤";activeRecognition=null;};
+    rec.start();
+    activeRecognition=rec;
+  };
+}
+function handleVoiceCommand(text,date){
+  const stop=new Set(["mark","please","the","a","an","done","complete","completed","finished","was","is","for","today","just","ok","okay","and","it","she","her"]);
+  const words=text.toLowerCase().replace(/[.,!?]/g,"").split(/\s+/).filter(Boolean);
+  const sigWords=words.filter(w=>!stop.has(w));
+  const list=tasksFor(date);
+  let best=null,bestScore=0,bestPeriod=null;
+  for(const t of list){
+    const tWords=t.title.toLowerCase().replace(/[.,!?]/g,"").split(/\s+/);
+    for(const pid of t.periods){
+      if(isDone(date,t.key,pid)||!periodStarted(date,pid))continue;
+      let score=0; sigWords.forEach(w=>{if(tWords.some(tw=>tw.length>2&&(tw.startsWith(w)||w.startsWith(tw))))score++;});
+      if(score>bestScore){bestScore=score;best=t;bestPeriod=pid;}
+    }
+  }
+  const box=$("#vs-match"); if(!box)return;
+  if(best&&bestScore>0){
+    const bestWords=new Set(best.title.toLowerCase().replace(/[.,!?]/g,"").split(/\s+/));
+    const leftover=sigWords.filter(w=>![...bestWords].some(tw=>tw.startsWith(w)||w.startsWith(tw))).join(" ");
+    box.innerHTML=`<div class="banner good">Match: <strong>${esc(best.title)}</strong> (${PLABEL[bestPeriod]})</div>
+      <div class="field"><label>Note</label><textarea id="vs-note">${esc(leftover)}</textarea></div>
+      <div class="btnrow"><button class="btn" id="vs-confirm">✓ Sign off as ${esc(me())}</button><button class="btn sec" id="vs-retry">Try again</button></div>`;
+    $("#vs-confirm").onclick=()=>{
+      const note=$("#vs-note").value.trim();
+      S.completions[ckey(date,best.key,bestPeriod)]={at:Date.now(),by:me(),note};
+      if(note)S.notes.unshift({id:uid(),at:Date.now(),by:me(),text:"["+best.title+"] "+note,pinned:false,auto:true});
+      save();closeSheet();render();
+    };
+    $("#vs-retry").onclick=()=>{box.innerHTML="";const t=$("#vs-transcript");if(t)t.textContent="";};
+  }else{
+    box.innerHTML=`<div class="banner warn">Heard: “${esc(text)}” — couldn't match a task. Try naming it directly, like “temperature” or “exercises.”</div>
+      <div class="btnrow"><button class="btn sec" id="vs-retry2">Try again</button></div>`;
+    $("#vs-retry2").onclick=()=>{box.innerHTML="";const t=$("#vs-transcript");if(t)t.textContent="";};
+  }
+}
+
+/* ---------- caregiver picker & sheet plumbing ---------- */
+function caregiverChipsHTML(id,current){
+  return `<div class="chips" id="${id}">${S.caregivers.map(c=>`<button class="chip ${c===current?"on":""}">${esc(c)}</button>`).join("")}<button class="chip" data-addcg>+ Add name</button></div>`;
+}
+function wireCaregiverChips(id,onPick){
+  $$("#"+id+" .chip:not([data-addcg])").forEach(c=>c.onclick=()=>{
+    onPick(c.textContent);
+    $$("#"+id+" .chip:not([data-addcg])").forEach(x=>x.classList.toggle("on",x.textContent===c.textContent));
+  });
+  const add=$("#"+id+" [data-addcg]");
+  if(add)add.onclick=()=>{
+    const name=(prompt("Add a caregiver's name")||"").trim();
+    if(!name)return;
+    if(!S.caregivers.includes(name))S.caregivers.push(name);
+    save();
+    onPick(name);
+    const wrap=document.getElementById(id);
+    if(wrap&&wrap.isConnected){wrap.outerHTML=caregiverChipsHTML(id,name);wireCaregiverChips(id,onPick);}
+  };
+}
+function caregiverEditSheet(name){
+  openSheet(`<h3>Caregiver</h3>
+    <div class="field"><label>Name</label><input id="cge-name" value="${esc(name)}"></div>
+    <div class="btnrow"><button class="btn" id="cge-save">Save</button><button class="btn danger" id="cge-del">Remove</button><button class="btn sec" id="cge-cancel">Cancel</button></div>
+    <p class="muted" style="margin-top:8px">Renaming or removing someone doesn't change sign-offs already logged under their name.</p>`);
+  $("#cge-cancel").onclick=closeSheet;
+  $("#cge-save").onclick=()=>{const v=$("#cge-name").value.trim();if(!v)return;const i=S.caregivers.indexOf(name);if(i>=0)S.caregivers[i]=v;if(me()===name)setMe(v);save();closeSheet();render();};
+  $("#cge-del").onclick=()=>{if(!confirm("Remove "+name+" from the caregiver list?"))return;S.caregivers=S.caregivers.filter(x=>x!==name);if(!S.caregivers.length)S.caregivers=["Caregiver"];if(me()===name)setMe(S.caregivers[0]);save();closeSheet();render();};
+}
+let identityAsked=false;
+function ensureIdentity(){
+  if(identityAsked||!S.setup||document.querySelector(".overlay"))return;
+  if(localStorage.getItem(DEVKEY))return;      // this phone already knows who it is
+  identityAsked=true;
+  openSheet(`<h3>Who are you? 👋</h3>
+    <p class="muted" style="margin-top:-4px">Pick your name so anything you check off on <em>this phone</em> is signed with it automatically. New here? Tap “+ Add name.”</p>
+    ${caregiverChipsHTML("id-who",me())}
+    <p class="muted" style="margin-top:8px">You can change this later from the 🤝 button at the top.</p>`);
+  wireCaregiverChips("id-who",n=>{setMe(n);closeSheet();render();});
+}
+function pickCaregiver(){
+  openSheet(`<h3>Who's caring right now?</h3>
+    ${caregiverChipsHTML("pc-who",me())}
+    <p class="muted" style="margin-top:10px">This name is pre-filled when you mark tasks done or post notes on this phone. New here? Tap “+ Add name.”</p>
+    <div class="btnrow"><button class="btn sec" id="pc-close">Close</button></div>`);
+  wireCaregiverChips("pc-who",n=>{setMe(n);closeSheet();render();});
+  $("#pc-close").onclick=closeSheet;
+}
+let onCloseSheet=null;
+function openSheet(html,onClose){
+  onCloseSheet=onClose||null;
+  $("#modal").innerHTML=`<div class="overlay" id="ovl"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("#ovl").onclick=e=>{if(e.target.id==="ovl")closeSheet();};
+  wireMicButtons();
+}
+function closeSheet(){if(activeRecognition){try{activeRecognition.stop();}catch(e){}activeRecognition=null;}if(onCloseSheet)onCloseSheet();onCloseSheet=null;$("#modal").innerHTML="";if(pullSkipped){pullSkipped=false;setTimeout(syncNow,700);}}
+
+/* ---------- boot ---------- */
+load();
+if(SYNC.url){
+  if(S.setup)render();
+  else{renderTabs();$("#app").innerHTML=`<div class="card" style="margin-top:35vh;text-align:center">💗<br>Connecting to the shared care log…</div>`;}
+  syncNow().finally(()=>render());
+  setInterval(()=>{if(!document.hidden)syncNow();},12000);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow();});
+}else render();
+</script>
+<!--A-END-->
+</body>
+</html>

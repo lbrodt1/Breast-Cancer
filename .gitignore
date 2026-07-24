@@ -1,0 +1,9 @@
+# Local Claude Code / Cowork settings
+.claude/
+
+# One-off manual-deploy folder (Netlify builds from GitHub now)
+deploy/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
