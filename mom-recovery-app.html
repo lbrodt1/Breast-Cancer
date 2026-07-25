@@ -174,6 +174,8 @@
   .cal-dot.done{background:var(--good)}
   .cal-legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink2)}
   .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  .datebtn{width:100%;justify-content:space-between;font-weight:400}
+  .datecal .cal-cell{cursor:pointer}
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 </style>
 
@@ -183,7 +185,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.4"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.5"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -480,7 +482,7 @@ function render(){
   else if(VIEW==="schedule")wireSchedule();
   else wireMore();
   wireMicButtons();
-  wireDatePickers();
+  wireDateFields();
   ensureIdentity();
 }
 
@@ -489,9 +491,9 @@ function setupHTML(){return `
   <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Let's set up the recovery companion — takes one minute.</div></header>
   <div class="card">
     <div class="field"><label>Who are we caring for?</label><input id="su-name" value="Mom"></div>
-    <div class="field"><label>Surgery date</label><input id="su-date" type="date" value="${S.surgeryDate}">
+    <div class="field"><label>Surgery date</label>${dateFieldHTML("su-date",S.surgeryDate)}
       <div class="muted">Recovery tasks (drains, exercises, meds) unlock on this date. You can change it any time in More, and the schedule updates everywhere.</div></div>
-    <div class="field"><label>Expected end of care <span style="font-weight:400">(optional)</span></label><input id="su-end" type="date" value="${S.careEndDate||''}">
+    <div class="field"><label>Expected end of care <span style="font-weight:400">(optional)</span></label>${dateFieldHTML("su-end",S.careEndDate)}
       <div class="muted">Defaults to 6 weeks after surgery. Sets how long the schedule runs — change it any time.</div></div>
     <div class="field"><label>How many JP drains does she have?</label>
       <div class="chips" id="su-drains">${[1,2,3,4].map(n=>`<button class="chip ${n===2?"on":""}" data-n="${n}">${n}</button>`).join("")}</div></div>
@@ -1098,9 +1100,9 @@ function moreHTML(){
   return `
   <div class="sect"><h2>Care setup</h2></div>
   <div class="card">
-    <div class="field"><label>Surgery date</label><input id="st-date" type="date" value="${S.surgeryDate}">
+    <div class="field"><label>Surgery date</label>${dateFieldHTML("st-date",S.surgeryDate)}
       <div class="muted">The schedule, the Day/Week counter, and every task's default dates all flow from this.</div></div>
-    <div class="field"><label>End of care</label><input id="st-end" type="date" value="${S.careEndDate||''}">
+    <div class="field"><label>End of care</label>${dateFieldHTML("st-end",S.careEndDate)}
       <div class="muted">When recovery wraps up — sets how many weeks the schedule runs. Leave blank for the 6-week default (${fmtDateNice(careEnd())}).</div></div>
     <div class="field"><label>Patient name</label><input id="st-name" value="${esc(S.patient)}"></div>
     <div class="field"><label class="rowflex" style="justify-content:space-between">Scar massage unlocked
@@ -1175,8 +1177,8 @@ function medSheet(m){
       <input type="checkbox" id="md-prn" style="width:auto;transform:scale(1.4)" ${m&&m.prn?"checked":""}></label></div>
     <div class="field"><label>Instructions (optional)</label><input id="md-instr" value="${m?esc(m.instr||""):""}" placeholder="e.g. with food · max 4/day"></div>
     <div class="field"><label>Info link (optional)</label><input id="md-link" type="url" value="${m?esc(m.link||""):""}" placeholder="e.g. pharmacy leaflet URL"></div>
-    <div class="rowflex"><div class="field" style="flex:1"><label>Start date</label><input id="md-sd" type="date" value="${m&&m.startDate?m.startDate:(m?"":S.surgeryDate)}"></div>
-    <div class="field" style="flex:1"><label>End date</label><input id="md-ed" type="date" value="${m&&m.endDate?m.endDate:(m?"":careEnd())}"></div></div>
+    <div class="field"><label>Start date</label>${dateFieldHTML("md-sd",m&&m.startDate?m.startDate:(m?"":S.surgeryDate))}</div>
+    <div class="field"><label>End date</label>${dateFieldHTML("md-ed",m&&m.endDate?m.endDate:(m?"":careEnd()))}</div>
     <div class="muted" style="margin:-6px 0 12px">Defaults to the surgery date through end of care. Narrow it for a med that only runs part of recovery.</div>
     <div class="field"><label class="rowflex" style="justify-content:space-between">Show before surgery too
       <input type="checkbox" id="md-preop" style="width:auto;transform:scale(1.4)" ${m&&m.preOp?"checked":""}></label>
@@ -1206,8 +1208,8 @@ function taskSheet(c){
     <div class="field"><label>Task</label><input id="tk-title" value="${c?esc(c.title):""}" placeholder="e.g. Short walk around the block"></div>
     <div class="field"><label>When</label>${periodPicker(sel)}</div>
     <div class="field"><label>Details / instructions (optional)</label><textarea id="tk-instr">${c?esc(c.instr||""):""}</textarea></div>
-    <div class="rowflex"><div class="field" style="flex:1"><label>Start date</label><input id="tk-sd" type="date" value="${c&&c.startDate?c.startDate:(c?"":S.surgeryDate)}"></div>
-    <div class="field" style="flex:1"><label>End date</label><input id="tk-ed" type="date" value="${c&&c.endDate?c.endDate:(c?"":careEnd())}"></div></div>
+    <div class="field"><label>Start date</label>${dateFieldHTML("tk-sd",c&&c.startDate?c.startDate:(c?"":S.surgeryDate))}</div>
+    <div class="field"><label>End date</label>${dateFieldHTML("tk-ed",c&&c.endDate?c.endDate:(c?"":careEnd()))}</div>
     <div class="muted" style="margin:-6px 0 12px">Defaults to the surgery date through end of care. Adjust for a task that only applies part of the time.</div>
     <div class="field"><label class="rowflex" style="justify-content:space-between">Show before surgery too
       <input type="checkbox" id="tk-preop" style="width:auto;transform:scale(1.4)" ${c&&c.preOp?"checked":""}></label>
@@ -1293,13 +1295,53 @@ function wireMicButtons(){
     btn.onclick=()=>startDictation(btn.dataset.mic,btn);
   });
 }
-// Make the whole date field open the native calendar on click/focus,
-// not just the small calendar icon (which is easy to miss).
-function wireDatePickers(){
-  // Intentionally a no-op. We rely on the browser's built-in date picker: on a
-  // phone it opens on tap; on desktop, click the calendar icon in the field.
-  // Calling showPicker() ourselves was popping the calendar and then the browser
-  // closed it again — an open-then-close flash. Native behavior never flashes.
+/* ---------- custom date field: an in-app calendar (no flaky native picker) ---------- */
+function dateFieldHTML(id,value){
+  return `<input type="hidden" id="${id}" value="${esc(value||'')}">
+    <button type="button" class="btn sec datebtn" data-datefield="${id}"><span>${value?esc(fmtDateNice(value)):"Choose a date"}</span><span aria-hidden="true">📅</span></button>
+    <div class="datecal" id="cal-${id}" style="display:none"></div>`;
+}
+const dateCalMonth={};
+function wireDateFields(){
+  $$('[data-datefield]').forEach(btn=>{
+    if(btn._dfWired)return; btn._dfWired=true;
+    btn.addEventListener("click",e=>{ e.preventDefault(); e.stopPropagation(); toggleDateCal(btn.dataset.datefield); });
+  });
+}
+function updateDateBtn(id){
+  const btn=$('[data-datefield="'+id+'"]'), inp=document.getElementById(id);
+  if(btn)btn.innerHTML=`<span>${inp.value?esc(fmtDateNice(inp.value)):"Choose a date"}</span><span aria-hidden="true">📅</span>`;
+}
+function toggleDateCal(id){
+  const cal=document.getElementById("cal-"+id); if(!cal)return;
+  if(cal.style.display!=="none"){ cal.style.display="none"; return; }
+  const inp=document.getElementById(id);
+  dateCalMonth[id]=(inp.value||todayStr()).slice(0,7);
+  renderDateCal(id);
+  cal.style.display="";
+}
+function renderDateCal(id){
+  const cal=document.getElementById("cal-"+id), inp=document.getElementById(id);
+  const [yy,mm]=dateCalMonth[id].split("-").map(Number);
+  const first=new Date(yy,mm-1,1), startDow=first.getDay(), dim=new Date(yy,mm,0).getDate();
+  const monthLbl=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const dows=["S","M","T","W","T","F","S"].map(d=>`<div class="cal-dow">${d}</div>`).join("");
+  let cells="";
+  for(let i=0;i<startDow;i++)cells+=`<div class="cal-cell empty"></div>`;
+  for(let day=1;day<=dim;day++){
+    const ds=yy+"-"+pad(mm)+"-"+pad(day), sel=inp.value===ds;
+    cells+=`<button type="button" class="cal-cell${sel?" today":""}" data-pick="${ds}"><span class="cal-num">${day}</span></button>`;
+  }
+  cal.innerHTML=`<div class="card" style="margin-top:8px">
+    <div class="cal-head"><button type="button" class="btn small sec" data-calnav="prev" aria-label="Previous month">‹</button><strong>${monthLbl}</strong><button type="button" class="btn small sec" data-calnav="next" aria-label="Next month">›</button></div>
+    <div class="cal-grid cal-dows">${dows}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="btnrow"><button type="button" class="btn small sec" data-caltoday>Today</button><button type="button" class="btn small sec" data-calclear>Clear</button></div>
+  </div>`;
+  $$("#cal-"+id+" [data-pick]").forEach(b=>b.onclick=()=>{ inp.value=b.dataset.pick; updateDateBtn(id); cal.style.display="none"; });
+  $$("#cal-"+id+" [data-calnav]").forEach(b=>b.onclick=()=>{ const[y,m]=dateCalMonth[id].split("-").map(Number); const d=new Date(y,(b.dataset.calnav==="prev"?m-2:m),1); dateCalMonth[id]=d.getFullYear()+"-"+pad(d.getMonth()+1); renderDateCal(id); });
+  const t=$("#cal-"+id+" [data-caltoday]"); if(t)t.onclick=()=>{ inp.value=todayStr(); updateDateBtn(id); cal.style.display="none"; };
+  const c=$("#cal-"+id+" [data-calclear]"); if(c)c.onclick=()=>{ inp.value=""; updateDateBtn(id); cal.style.display="none"; };
 }
 function startDictation(targetId,btn){
   const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1446,7 +1488,7 @@ function openSheet(html,onClose){
   ovl.addEventListener("touchstart",down,{passive:true});
   ovl.addEventListener("click",e=>{ if(e.target===ovl && pressedBackdrop) closeSheet(); });
   wireMicButtons();
-  wireDatePickers();
+  wireDateFields();
 }
 function closeSheet(){if(activeRecognition){try{activeRecognition.stop();}catch(e){}activeRecognition=null;}if(onCloseSheet)onCloseSheet();onCloseSheet=null;$("#modal").innerHTML="";if(pullSkipped){pullSkipped=false;setTimeout(syncNow,700);}}
 

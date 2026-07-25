@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.5 - 2026-07-24
+- Replaced the date fields with a built-in calendar (tap a field, a calendar drops down, tap a day) so date selection works reliably on desktop and phone with no flashing
+
 ## v1.0.4 - 2026-07-24
 - Date pickers now use the browser's native calendar so they no longer flash open and close on desktop
 
