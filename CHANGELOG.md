@@ -1,8 +1,11 @@
 # Changelog
 
-All notable changes to Recovery Track. Newest entries on top.
+All notable changes to Recovery Tracker. Newest entries on top.
 
-## 2026-07-24 — Recovery Track relaunch
+## v1.0.1 - 2026-07-24
+- First full release live: Recovery Tracker rename, Schedule + calendar tab, end-of-care & per-task dates, test mode, per-phone caregivers, Gemini day summary, and date-picker fixes
+
+## 2026-07-24 — Recovery Tracker relaunch
 
 ### Added
 - **Schedule tab** (📅) with a **month calendar view** — the surgery day is marked, days with tasks due and days already logged get their own dots, today is outlined, months can be paged, and tapping any day opens it — followed by the week-by-week schedule cards.
@@ -13,7 +16,7 @@ All notable changes to Recovery Track. Newest entries on top.
 - **Per-phone caregiver identity**: each phone is asked once who is using it and remembers the answer, so every sign-off is attributed automatically. (A web app can't read a person's name from the phone itself; this remembered-per-phone approach achieves the same result.)
 
 ### Changed
-- **Renamed the app to "Recovery Track"** (setup screen and browser tab).
+- **Renamed the app to "Recovery Tracker"** (setup screen and browser tab).
 - **Reordered the More tab** to: Care setup (surgery date first), Prep checklist, Caregivers, Medications, Tasks.
 - **Moved the weekly schedule** out of More into its own Schedule tab, recomputed live from the surgery date, the end-of-care date, and each task's date range.
 - Medication and task editors now use **start/end date pickers** instead of week numbers.
