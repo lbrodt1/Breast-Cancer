@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.2 - 2026-07-24
+- Fixed popups/dialogs flashing closed on touch screens - the tap that opens a sheet no longer dismisses it
+
 ## v1.0.1 - 2026-07-24
 - First full release live: Recovery Tracker rename, Schedule + calendar tab, end-of-care & per-task dates, test mode, per-phone caregivers, Gemini day summary, and date-picker fixes
 

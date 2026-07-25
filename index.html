@@ -183,7 +183,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.1"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.2"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1436,7 +1436,17 @@ let onCloseSheet=null;
 function openSheet(html,onClose){
   onCloseSheet=onClose||null;
   $("#modal").innerHTML=`<div class="overlay" id="ovl"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
-  $("#ovl").onclick=e=>{if(e.target.id==="ovl")closeSheet();};
+  const ovl=$("#ovl");
+  // Close only when the press STARTS and ENDS on the backdrop itself. The tap that
+  // opens the sheet starts on a button (before this overlay exists), so its stray
+  // "ghost click" landing on the overlay can't dismiss it — that ghost click was
+  // flashing sheets closed instantly on touch screens.
+  let pressedBackdrop=false;
+  const down=e=>{ pressedBackdrop=(e.target===ovl); };
+  ovl.addEventListener("pointerdown",down);
+  ovl.addEventListener("mousedown",down);
+  ovl.addEventListener("touchstart",down,{passive:true});
+  ovl.addEventListener("click",e=>{ if(e.target===ovl && pressedBackdrop) closeSheet(); });
   wireMicButtons();
   wireDatePickers();
 }
