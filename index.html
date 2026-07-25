@@ -185,7 +185,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.6"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.7"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -258,6 +258,10 @@ async function flushDiff(){
   if(dels.length)await sreq("DELETE","/rest/v1/"+SYNC.table+"?id=in."+encodeURIComponent("("+dels.map(i=>'"'+i.replace(/"/g,"")+'"').join(",")+")"));
   lastSnap=JSON.parse(JSON.stringify(cur));
 }
+// Order-independent JSON so a re-key by the database doesn't look like a real change.
+function stableJSON(o){
+  return JSON.stringify(o,(k,v)=>(v&&typeof v==="object"&&!Array.isArray(v))?Object.keys(v).sort().reduce((a,key)=>{a[key]=v[key];return a;},{}):v);
+}
 async function pullMerge(){
   if(document.querySelector(".overlay")){pullSkipped=true;return;}
   const rows=await sreq("GET","/rest/v1/"+SYNC.table+"?select=id,kind,data&limit=10000")||[];
@@ -265,7 +269,7 @@ async function pullMerge(){
   const cur=toRecords(S), merged={};
   for(const id in cur)if(!(id in lastSnap))merged[id]=cur[id];
   for(const id in server)merged[id]=server[id];
-  const changed=JSON.stringify(cur)!==JSON.stringify(merged);
+  const changed=stableJSON(cur)!==stableJSON(merged);
   lastSnap=JSON.parse(JSON.stringify(server));
   if(changed){applyRecords(merged);render();}
 }
@@ -466,9 +470,10 @@ function render(){
   renderTabs();
   const app=$("#app");
   // Snapshot expanded how-tos / instructions so a background sync re-render doesn't collapse them.
-  const _openD=new Set(), _openI=new Set();
+  const _openD=new Set(), _openI=new Set(), _openCal={};
   app.querySelectorAll("details[open]").forEach(d=>{const s=d.querySelector("summary");if(s)_openD.add(s.textContent.trim());});
   app.querySelectorAll(".task .instr").forEach(i=>{if(i.style.display!=="none"){const r=i.closest(".task");if(r)_openI.add(r.dataset.task+"|"+r.dataset.period);}});
+  app.querySelectorAll(".datecal").forEach(c=>{if(c.style.display!=="none"){const id=c.id.slice(4);_openCal[id]=dateCalMonth[id];}});
   if(!S.setup){app.innerHTML=setupHTML();wireSetup();return;}
   let body="";
   if(VIEW==="today")body=todayHTML(VIEWDATE);
@@ -481,6 +486,7 @@ function render(){
   // Restore what was expanded before the re-render.
   $$("details").forEach(d=>{const s=d.querySelector("summary");if(s&&_openD.has(s.textContent.trim()))d.open=true;});
   $$(".task").forEach(r=>{const i=r.querySelector(".instr");if(i&&_openI.has(r.dataset.task+"|"+r.dataset.period)){i.style.display="";const ch=r.querySelector(".chev");if(ch)ch.textContent="▾";}});
+  Object.keys(_openCal).forEach(id=>{const c=document.getElementById("cal-"+id);if(c){dateCalMonth[id]=_openCal[id];renderDateCal(id);c.style.display="";}});
   $("#whobtn").onclick=pickCaregiver;
   if(VIEW==="today")wireToday(VIEWDATE);
   else if(VIEW==="drains")wireDrains();

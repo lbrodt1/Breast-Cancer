@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.7 - 2026-07-24
+- Fixed the app rebuilding the whole screen every 12 seconds (the database reordered JSON keys so the sync always thought data changed) - now it only re-renders on real changes, so calendars and how-tos stay put
+
 ## v1.0.6 - 2026-07-24
 - Fixed how-tos and instructions collapsing when the app synced in the background - expanded sections now stay open through a re-render
 
