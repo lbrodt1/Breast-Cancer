@@ -183,7 +183,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.3"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.4"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1296,14 +1296,10 @@ function wireMicButtons(){
 // Make the whole date field open the native calendar on click/focus,
 // not just the small calendar icon (which is easy to miss).
 function wireDatePickers(){
-  // Touch devices (phones/tablets) already open their native calendar on tap;
-  // calling showPicker() as well makes it flash open and close. So only help
-  // mouse/desktop, where clicking the field body otherwise wouldn't open it.
-  if(window.matchMedia&&window.matchMedia("(pointer: coarse)").matches)return;
-  $$('input[type="date"]').forEach(el=>{
-    if(el._dpWired||!el.showPicker)return; el._dpWired=true;
-    el.addEventListener("click",e=>{ e.preventDefault(); try{el.showPicker();}catch(err){} });
-  });
+  // Intentionally a no-op. We rely on the browser's built-in date picker: on a
+  // phone it opens on tap; on desktop, click the calendar icon in the field.
+  // Calling showPicker() ourselves was popping the calendar and then the browser
+  // closed it again — an open-then-close flash. Native behavior never flashes.
 }
 function startDictation(targetId,btn){
   const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;

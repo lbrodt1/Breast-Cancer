@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.4 - 2026-07-24
+- Date pickers now use the browser's native calendar so they no longer flash open and close on desktop
+
 ## v1.0.3 - 2026-07-24
 - Fixed the date pickers flashing open and closing on phones/tablets - the native calendar now opens normally on touch
 
