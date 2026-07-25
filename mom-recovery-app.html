@@ -185,7 +185,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.5"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.6"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -465,6 +465,10 @@ function headerHTML(){
 function render(){
   renderTabs();
   const app=$("#app");
+  // Snapshot expanded how-tos / instructions so a background sync re-render doesn't collapse them.
+  const _openD=new Set(), _openI=new Set();
+  app.querySelectorAll("details[open]").forEach(d=>{const s=d.querySelector("summary");if(s)_openD.add(s.textContent.trim());});
+  app.querySelectorAll(".task .instr").forEach(i=>{if(i.style.display!=="none"){const r=i.closest(".task");if(r)_openI.add(r.dataset.task+"|"+r.dataset.period);}});
   if(!S.setup){app.innerHTML=setupHTML();wireSetup();return;}
   let body="";
   if(VIEW==="today")body=todayHTML(VIEWDATE);
@@ -474,6 +478,9 @@ function render(){
   else if(VIEW==="schedule")body=scheduleTabHTML();
   else body=moreHTML();
   app.innerHTML=headerHTML()+body;
+  // Restore what was expanded before the re-render.
+  $$("details").forEach(d=>{const s=d.querySelector("summary");if(s&&_openD.has(s.textContent.trim()))d.open=true;});
+  $$(".task").forEach(r=>{const i=r.querySelector(".instr");if(i&&_openI.has(r.dataset.task+"|"+r.dataset.period)){i.style.display="";const ch=r.querySelector(".chev");if(ch)ch.textContent="▾";}});
   $("#whobtn").onclick=pickCaregiver;
   if(VIEW==="today")wireToday(VIEWDATE);
   else if(VIEW==="drains")wireDrains();

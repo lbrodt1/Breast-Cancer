@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.6 - 2026-07-24
+- Fixed how-tos and instructions collapsing when the app synced in the background - expanded sections now stay open through a re-render
+
 ## v1.0.5 - 2026-07-24
 - Replaced the date fields with a built-in calendar (tap a field, a calendar drops down, tap a day) so date selection works reliably on desktop and phone with no flashing
 
