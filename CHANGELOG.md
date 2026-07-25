@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.3 - 2026-07-24
+- Fixed the date pickers flashing open and closing on phones/tablets - the native calendar now opens normally on touch
+
 ## v1.0.2 - 2026-07-24
 - Fixed popups/dialogs flashing closed on touch screens - the tap that opens a sheet no longer dismisses it
 
