@@ -175,6 +175,8 @@
   .cal-legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-size:12px;color:var(--ink2)}
   .cal-legend span{display:inline-flex;align-items:center;gap:5px}
   .datebtn{width:100%;justify-content:space-between;font-weight:400}
+  .toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%) translateY(14px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;box-shadow:var(--shadow)}
+  .toast.show{opacity:.96;transform:translateX(-50%) translateY(0)}
   .datecal .cal-cell{cursor:pointer}
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -185,7 +187,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.7"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.8"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -216,7 +218,7 @@ async function sreq(method,path,body,extra){
 }
 function toRecords(st){
   const m={};
-  if(st.setup)m.settings={kind:"settings",data:{patient:st.patient,surgeryDate:st.surgeryDate,careEndDate:st.careEndDate,caregivers:st.caregivers,drains:st.drains,scarOK:st.scarOK,testMode:st.testMode,taskOverrides:st.taskOverrides,prep:st.prep,generalNotes:st.generalNotes}};
+  if(st.setup)m.settings={kind:"settings",data:{patient:st.patient,patientRelation:st.patientRelation,surgeryDate:st.surgeryDate,careEndDate:st.careEndDate,caregivers:st.caregivers,drains:st.drains,scarOK:st.scarOK,testMode:st.testMode,taskOverrides:st.taskOverrides,prep:st.prep,generalNotes:st.generalNotes}};
   st.meds.forEach(x=>m["med_"+x.id]={kind:"med",data:x});
   st.customTasks.forEach(x=>m["ctask_"+x.id]={kind:"ctask",data:x});
   Object.entries(st.completions).forEach(([k,v])=>m["comp_"+k]={kind:"comp",data:v});
@@ -231,7 +233,7 @@ function applyRecords(map){
   const st=defaults();
   const set=map.settings&&map.settings.data;
   if(set){Object.assign(st,JSON.parse(JSON.stringify(set)));st.setup=true;}
-  else Object.assign(st,{patient:S.patient,surgeryDate:S.surgeryDate,careEndDate:S.careEndDate,caregivers:S.caregivers,drains:S.drains,scarOK:S.scarOK,testMode:S.testMode,taskOverrides:S.taskOverrides,prep:S.prep,generalNotes:S.generalNotes,setup:S.setup});
+  else Object.assign(st,{patient:S.patient,patientRelation:S.patientRelation,surgeryDate:S.surgeryDate,careEndDate:S.careEndDate,caregivers:S.caregivers,drains:S.drains,scarOK:S.scarOK,testMode:S.testMode,taskOverrides:S.taskOverrides,prep:S.prep,generalNotes:S.generalNotes,setup:S.setup});
   for(const[id,r]of Object.entries(map)){
     if(id==="settings")continue;
     const d=JSON.parse(JSON.stringify(r.data));
@@ -290,7 +292,7 @@ function setSyncUI(s){
 const KEY="momRecoveryV1", DEVKEY="momRecoveryDevice";
 let S=null;
 function defaults(){return{
-  v:1, setup:false, patient:"Mom", surgeryDate:todayStr(), careEndDate:null, caregivers:["Caregiver"],
+  v:1, setup:false, patient:"Mom", patientRelation:"", surgeryDate:todayStr(), careEndDate:null, caregivers:["Caregiver"],
   drains:[{id:"d1",label:"JP #1",removedOn:null},{id:"d2",label:"JP #2",removedOn:null}],
   scarOK:false, testMode:false, meds:[], customTasks:[], taskOverrides:{},
   completions:{}, drainLogs:[], exItems:{}, notes:[], prep:{}, watchItems:[], aiSummaries:{},
@@ -459,12 +461,18 @@ function renderTabs(){
   $("#tabbar").innerHTML=TABS.map(t=>`<button data-tab="${t[0]}" class="${VIEW===t[0]?"on":""}" aria-label="${t[1]}"><span class="ico">${t[2]}</span>${t[1]}</button>`).join("");
   $$("#tabbar button").forEach(b=>b.onclick=()=>{if(b.dataset.tab==="today")VIEWDATE=todayStr();VIEW=b.dataset.tab;render();window.scrollTo(0,0);});
 }
+function toast(msg){
+  let t=document.getElementById("apptoast");
+  if(!t){t=document.createElement("div");t.id="apptoast";t.className="toast";document.body.appendChild(t);}
+  t.textContent=msg;requestAnimationFrame(()=>t.classList.add("show"));
+  clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),1600);
+}
 function headerHTML(){
   const d=dayNum(todayStr()),w=weekNum(todayStr()),tw=totalWeeks();
   const sub=d<0?`Surgery in ${-d} day${-d===1?"":"s"}`:(w>tw?`Day ${d} · Care schedule complete`:`Day ${d} · Week ${w} of ${tw}`);
   return `<header class="top"><div class="row"><h1>Recovery Tracker</h1>
     <button class="whochip" id="whobtn" title="Who's caring right now">🤝 ${esc(me())}</button></div>
-    <div class="daychip"><strong style="color:var(--accent)">${esc(S.patient)}</strong> · ${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span> <span style="font-size:11px;opacity:.5" title="App version">v${APP_VERSION}</span></div></header>`;
+    <div class="daychip"><strong style="color:var(--accent)">${esc(S.patient)}</strong>${S.patientRelation?` <span class="muted">(${esc(S.patientRelation)})</span>`:""} · ${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span> <span style="font-size:11px;opacity:.5" title="App version">v${APP_VERSION}</span></div></header>`;
 }
 function render(){
   renderTabs();
@@ -503,7 +511,8 @@ function render(){
 function setupHTML(){return `
   <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Let's set up the recovery companion — takes one minute.</div></header>
   <div class="card">
-    <div class="field"><label>Who are we caring for?</label><input id="su-name" value="Mom"></div>
+    <div class="field"><label>Patient's name</label><input id="su-name" value="${esc(S.patient&&S.patient!=="Mom"?S.patient:"")}" placeholder="e.g. Betty Brodas"></div>
+    <div class="field"><label>Relationship to you <span style="font-weight:400">(optional)</span></label><input id="su-rel" value="${esc(S.patientRelation||"")}" placeholder="e.g. Mom, Dad, Wife"></div>
     <div class="field"><label>Surgery date</label>${dateFieldHTML("su-date",S.surgeryDate)}
       <div class="muted">Recovery tasks (drains, exercises, meds) unlock on this date. You can change it any time in More, and the schedule updates everywhere.</div></div>
     <div class="field"><label>Expected end of care <span style="font-weight:400">(optional)</span></label>${dateFieldHTML("su-end",S.careEndDate)}
@@ -540,6 +549,7 @@ function wireSetup(){
   $$("#su-drains .chip").forEach(c=>c.onclick=()=>{n=+c.dataset.n;$$("#su-drains .chip").forEach(x=>x.classList.toggle("on",+x.dataset.n===n));});
   $("#su-go").onclick=()=>{
     S.patient=$("#su-name").value.trim()||"Mom";
+    S.patientRelation=$("#su-rel").value.trim();
     S.surgeryDate=$("#su-date").value||todayStr();
     S.careEndDate=$("#su-end").value||null;
     const pending=$("#su-cgadd")?$("#su-cgadd").value.trim():"";
@@ -1118,6 +1128,7 @@ function moreHTML(){
     <div class="field"><label>End of care</label>${dateFieldHTML("st-end",S.careEndDate)}
       <div class="muted">When recovery wraps up — sets how many weeks the schedule runs. Leave blank for the 6-week default (${fmtDateNice(careEnd())}).</div></div>
     <div class="field"><label>Patient name</label><input id="st-name" value="${esc(S.patient)}"></div>
+    <div class="field"><label>Relationship to you</label><input id="st-rel" value="${esc(S.patientRelation||"")}" placeholder="e.g. Mom"></div>
     <div class="field"><label class="rowflex" style="justify-content:space-between">Scar massage unlocked
       <input type="checkbox" id="st-scar" style="width:auto;transform:scale(1.4)" ${S.scarOK?"checked":""}></label>
       <div class="muted">Turn on once the incision is fully healed and the nurse says it's safe. Adds a daily scar-massage task.</div></div>
@@ -1161,11 +1172,12 @@ function wireMore(){
   $$("[data-btedit]").forEach(b=>b.onclick=()=>builtinSheet(b.dataset.btedit));
   $("#st-save").onclick=()=>{
     S.patient=$("#st-name").value.trim()||S.patient;
+    S.patientRelation=$("#st-rel").value.trim();
     S.surgeryDate=$("#st-date").value||S.surgeryDate;
     S.careEndDate=$("#st-end").value||null;
     S.scarOK=$("#st-scar").checked;
     S.testMode=$("#st-test").checked;
-    save();render();
+    save();render();toast("Saved ✓");
   };
   const cgAddBtn=$("#cg-addbtn");if(cgAddBtn)cgAddBtn.onclick=()=>{const v=($("#cg-add").value||"").trim();if(!v)return;if(!S.caregivers.includes(v))S.caregivers.push(v);save();render();};
   const cgAddIn=$("#cg-add");if(cgAddIn)cgAddIn.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();$("#cg-addbtn").click();}};

@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.8 - 2026-07-24
+- Added patient name and relationship (e.g. Betty Brodas, Mom) to setup and Care setup, shown in the header; added a Saved confirmation toast
+
 ## v1.0.7 - 2026-07-24
 - Fixed the app rebuilding the whole screen every 12 seconds (the database reordered JSON keys so the sync always thought data changed) - now it only re-renders on real changes, so calendars and how-tos stay put
 
