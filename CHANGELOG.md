@@ -2,6 +2,9 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.10 - 2026-07-26
+- xx
+
 ## v1.0.8 - 2026-07-24
 - Added patient name and relationship (e.g. Betty Brodas, Mom) to setup and Care setup, shown in the header; added a Saved confirmation toast
 
