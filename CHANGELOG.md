@@ -2,11 +2,18 @@
 
 All notable changes to Recovery Tracker. Newest entries on top.
 
+## v1.0.11 - 2026-07-27
+- Added a sign-in screen so the care log is no longer readable by anyone with the link
+- Each phone stays signed in, so caregivers should only need to do this once
+- Added Sign out to More, under Data
+- Records now carry a care-circle id, so the log can support more than one household later
+- Removed the surname from the patient-name example on the setup screen
+
 ## v1.0.10 - 2026-07-26
 - xx
 
 ## v1.0.8 - 2026-07-24
-- Added patient name and relationship (e.g. Betty Brodas, Mom) to setup and Care setup, shown in the header; added a Saved confirmation toast
+- Added patient name and relationship (e.g. Betty, Mom) to setup and Care setup, shown in the header; added a Saved confirmation toast
 
 ## v1.0.7 - 2026-07-24
 - Fixed the app rebuilding the whole screen every 12 seconds (the database reordered JSON keys so the sync always thought data changed) - now it only re-renders on real changes, so calendars and how-tos stay put

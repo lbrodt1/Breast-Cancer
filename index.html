@@ -187,7 +187,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.10"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.11"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -204,13 +204,51 @@ const PLABEL=Object.fromEntries(PERIODS.map(p=>[p[0],p[1]]));
 /* ---------- shared sync (Supabase) ---------- */
 const SYNC={url:"https://zewetwghnbiynuqkisbg.supabase.co",key:"sb_publishable_K6vRtMTydN6VqqBh6d1itA_SR5RHCkz",table:"mom_recovery_records"};
 const AI_FN_URL="https://zewetwghnbiynuqkisbg.supabase.co/functions/v1/daily-summary";
+const CIRCLE="brodt-recovery";            // one care circle for now; becomes per-household later
+const AUTHKEY="momRecoveryAuth";
+let AUTH={access:null,refresh:null,expires:0,email:null};
+function loadAuth(){try{const a=JSON.parse(localStorage.getItem(AUTHKEY)||"null");if(a&&a.refresh)AUTH=a;}catch(e){}}
+function saveAuth(){try{localStorage.setItem(AUTHKEY,JSON.stringify(AUTH));}catch(e){}}
+function clearAuth(){AUTH={access:null,refresh:null,expires:0,email:null};try{localStorage.removeItem(AUTHKEY);}catch(e){}}
+function signedIn(){return !!(AUTH&&AUTH.refresh);}
+async function authReq(path,body){
+  const res=await fetch(SYNC.url+path,{method:"POST",headers:{apikey:SYNC.key,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const txt=await res.text(); let j=null; try{j=txt?JSON.parse(txt):null;}catch(e){}
+  if(!res.ok)throw new Error((j&&(j.error_description||j.msg||j.error))||("HTTP "+res.status));
+  return j;
+}
+async function signIn(email,password){
+  const j=await authReq("/auth/v1/token?grant_type=password",{email,password});
+  AUTH={access:j.access_token,refresh:j.refresh_token,expires:Date.now()+(j.expires_in||3600)*1000,email};
+  saveAuth();
+}
+async function refreshAuth(){
+  if(!AUTH.refresh)return false;
+  try{
+    const j=await authReq("/auth/v1/token?grant_type=refresh_token",{refresh_token:AUTH.refresh});
+    AUTH={access:j.access_token,refresh:j.refresh_token||AUTH.refresh,expires:Date.now()+(j.expires_in||3600)*1000,email:AUTH.email};
+    saveAuth();return true;
+  }catch(e){return false;}
+}
+async function ensureAuth(){
+  if(!AUTH.refresh)return false;
+  if(AUTH.access&&Date.now()<AUTH.expires-60000)return true;
+  return await refreshAuth();
+}
+function signOut(){clearAuth();lastSnap={};location.reload();}
 let lastSnap={}, flushTimer=null, syncBusy=false, pullSkipped=false, syncState="off";
-async function sreq(method,path,body,extra){
+async function sreq(method,path,body,extra,_retried){
+  if(!await ensureAuth())throw new Error("not signed in");
   const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),9000);
   try{
     const res=await fetch(SYNC.url+path,{method,signal:ctl.signal,
-      headers:Object.assign({apikey:SYNC.key,Authorization:"Bearer "+SYNC.key,"Content-Type":"application/json"},extra||{}),
+      headers:Object.assign({apikey:SYNC.key,Authorization:"Bearer "+AUTH.access,"Content-Type":"application/json"},extra||{}),
       body:body?JSON.stringify(body):undefined});
+    if(res.status===401&&!_retried){            // token died mid-flight — refresh once, then retry
+      clearTimeout(t);
+      if(await refreshAuth())return sreq(method,path,body,extra,true);
+      throw new Error("session expired");
+    }
     if(!res.ok)throw new Error("HTTP "+res.status);
     const txt=await res.text();
     return txt?JSON.parse(txt):null;
@@ -254,10 +292,10 @@ function applyRecords(map){
 async function flushDiff(){
   const cur=toRecords(S), ups=[], dels=[];
   for(const id in cur)if(!lastSnap[id]||JSON.stringify(lastSnap[id])!==JSON.stringify(cur[id]))
-    ups.push({id,kind:cur[id].kind,data:cur[id].data,updated_at:new Date().toISOString()});
+    ups.push({id,kind:cur[id].kind,data:cur[id].data,circle_id:CIRCLE,updated_at:new Date().toISOString()});
   for(const id in lastSnap)if(!(id in cur))dels.push(id);
   if(ups.length)await sreq("POST","/rest/v1/"+SYNC.table,ups,{Prefer:"resolution=merge-duplicates,return=minimal"});
-  if(dels.length)await sreq("DELETE","/rest/v1/"+SYNC.table+"?id=in."+encodeURIComponent("("+dels.map(i=>'"'+i.replace(/"/g,"")+'"').join(",")+")"));
+  if(dels.length)await sreq("DELETE","/rest/v1/"+SYNC.table+"?circle_id=eq."+encodeURIComponent(CIRCLE)+"&id=in."+encodeURIComponent("("+dels.map(i=>'"'+i.replace(/"/g,"")+'"').join(",")+")"));
   lastSnap=JSON.parse(JSON.stringify(cur));
 }
 // Order-independent JSON so a re-key by the database doesn't look like a real change.
@@ -266,7 +304,7 @@ function stableJSON(o){
 }
 async function pullMerge(){
   if(document.querySelector(".overlay")){pullSkipped=true;return;}
-  const rows=await sreq("GET","/rest/v1/"+SYNC.table+"?select=id,kind,data&limit=10000")||[];
+  const rows=await sreq("GET","/rest/v1/"+SYNC.table+"?select=id,kind,data&circle_id=eq."+encodeURIComponent(CIRCLE)+"&limit=10000")||[];
   const server={};rows.forEach(r=>server[r.id]={kind:r.kind,data:r.data});
   const cur=toRecords(S), merged={};
   for(const id in cur)if(!(id in lastSnap))merged[id]=cur[id];
@@ -511,7 +549,7 @@ function render(){
 function setupHTML(){return `
   <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Let's set up the recovery companion — takes one minute.</div></header>
   <div class="card">
-    <div class="field"><label>Patient's name</label><input id="su-name" value="${esc(S.patient&&S.patient!=="Mom"?S.patient:"")}" placeholder="e.g. Betty Brodas"></div>
+    <div class="field"><label>Patient's name</label><input id="su-name" value="${esc(S.patient&&S.patient!=="Mom"?S.patient:"")}" placeholder="e.g. Betty"></div>
     <div class="field"><label>Relationship to you <span style="font-weight:400">(optional)</span></label><input id="su-rel" value="${esc(S.patientRelation||"")}" placeholder="e.g. Mom, Dad, Wife"></div>
     <div class="field"><label>Surgery date</label>${dateFieldHTML("su-date",S.surgeryDate)}
       <div class="muted">Recovery tasks (drains, exercises, meds) unlock on this date. You can change it any time in More, and the schedule updates everywhere.</div></div>
@@ -888,7 +926,7 @@ async function generateDaySummary(date,btn){
   if(!facts)return;
   if(btn){btn.disabled=true;btn.textContent="Thinking…";}
   try{
-    const res=await fetch(AI_FN_URL,{method:"POST",headers:{apikey:SYNC.key,Authorization:"Bearer "+SYNC.key,"x-app-key":SYNC.key,"content-type":"application/json"},body:JSON.stringify({patient:S.patient,date,facts})});
+    const res=await fetch(AI_FN_URL,{method:"POST",headers:{apikey:SYNC.key,Authorization:"Bearer "+(AUTH.access||SYNC.key),"x-app-key":SYNC.key,"content-type":"application/json"},body:JSON.stringify({patient:S.patient,date,facts})});
     const data=await res.json();
     if(!res.ok||data.error)throw new Error(data.error||"AI request failed");
     S.aiSummaries[date]={text:data.summary,at:Date.now(),facts,by:me()};
@@ -1159,6 +1197,8 @@ function moreHTML(){
   <div class="sect"><h2>Data</h2></div>
   <div class="card">
     <div class="btnrow"><button class="btn sec" id="dt-export">Export / back up</button><button class="btn sec" id="dt-import">Import</button><button class="btn danger" id="dt-reset">Reset everything</button></div>
+    <div class="btnrow" style="margin-top:8px"><button class="btn sec" id="dt-signout">Sign out of this phone</button></div>
+    <div class="muted">Signed in as ${esc((AUTH&&AUTH.email)||"—")}. Signing out only affects this phone.</div>
     <p class="muted" style="margin-top:10px">Everything syncs automatically to the shared care log — every caregiver's phone sees the same tasks, drain totals, and notes. Export makes a backup copy; Import restores one.</p>
   </div>
   <div class="muted" style="text-align:center;font-size:11px;margin-top:14px;opacity:.7">Recovery Tracker&nbsp;·&nbsp;v${APP_VERSION}</div>
@@ -1185,10 +1225,11 @@ function wireMore(){
   $$("[data-prep]").forEach(b=>b.onclick=()=>{S.prep[b.dataset.prep]=!S.prep[b.dataset.prep];save();render();});
   $("#dt-export").onclick=exportSheet;
   $("#dt-import").onclick=importSheet;
+  $("#dt-signout").onclick=()=>{if(confirm("Sign out of the care log on this phone?"))signOut();};
   $("#dt-reset").onclick=async()=>{
     if(!confirm(SYNC.url?"Erase ALL data — schedule, logs, notes — for EVERY caregiver on the shared care log? This can't be undone.":"Erase ALL data on this phone — schedule, logs, notes? This can't be undone."))return;
     if(!confirm("Really erase everything?"))return;
-    if(SYNC.url){try{await sreq("DELETE","/rest/v1/"+SYNC.table+"?id=not.is.null");}catch(e){alert("Couldn't reach the shared log — try again when online.");return;}}
+    if(SYNC.url){try{await sreq("DELETE","/rest/v1/"+SYNC.table+"?circle_id=eq."+encodeURIComponent(CIRCLE));}catch(e){alert("Couldn't reach the shared log — try again when online.");return;}}
     lastSnap={};localStorage.removeItem(KEY);load();render();
   };
 }
@@ -1517,15 +1558,45 @@ function openSheet(html,onClose){
 }
 function closeSheet(){if(activeRecognition){try{activeRecognition.stop();}catch(e){}activeRecognition=null;}if(onCloseSheet)onCloseSheet();onCloseSheet=null;$("#modal").innerHTML="";if(pullSkipped){pullSkipped=false;setTimeout(syncNow,700);}}
 
+/* ---------- sign in ---------- */
+function renderSignIn(msg){
+  document.getElementById("tabbar").innerHTML="";
+  $("#app").innerHTML=`
+  <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Sign in to open the shared care log</div></header>
+  <div class="card">
+    <div class="field"><label>Email</label><input id="si-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com" value="${esc((AUTH&&AUTH.email)||"")}"></div>
+    <div class="field"><label>Password</label><input id="si-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    ${msg?`<div class="muted" style="color:var(--bad);margin-bottom:8px">${esc(msg)}</div>`:""}
+    <button class="btn wide" id="si-go">Sign in</button>
+    <div class="muted" style="margin-top:10px">Your phone will remember you — you shouldn't need to do this again.</div>
+  </div>`;
+  const go=async()=>{
+    const em=($("#si-email").value||"").trim(), pw=$("#si-pass").value||"";
+    if(!em||!pw){renderSignIn("Enter your email and password.");return;}
+    $("#si-go").disabled=true;$("#si-go").textContent="Signing in…";
+    try{await signIn(em,pw);startApp();}
+    catch(e){renderSignIn(/invalid/i.test(e.message)?"That email or password wasn't right.":("Couldn't sign in — "+e.message));}
+  };
+  $("#si-go").onclick=go;
+  $("#si-pass").onkeydown=e=>{if(e.key==="Enter")go();};
+  $("#si-email").onkeydown=e=>{if(e.key==="Enter")$("#si-pass").focus();};
+}
+
 /* ---------- boot ---------- */
-load();
-if(SYNC.url){
+function startApp(){
   if(S.setup)render();
   else{renderTabs();$("#app").innerHTML=`<div class="card" style="margin-top:35vh;text-align:center">💗<br>Connecting to the shared care log…</div>`;}
   syncNow().finally(()=>render());
   setInterval(()=>{if(!document.hidden)syncNow();},12000);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow();});
-}else render();
+}
+load();loadAuth();
+if(!SYNC.url){render();}
+else if(!signedIn()){renderSignIn();}
+else{
+  renderTabs();$("#app").innerHTML=`<div class="card" style="margin-top:35vh;text-align:center">💗<br>Opening the care log…</div>`;
+  ensureAuth().then(ok=>{ if(ok)startApp(); else {clearAuth();renderSignIn("Please sign in again.");} });
+}
 </script>
 <!--A-END-->
 </body>
