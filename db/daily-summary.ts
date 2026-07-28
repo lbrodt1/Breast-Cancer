@@ -1,4 +1,4 @@
-// Recovery Tracker — daily AI summary (Gemini)
+// OktoHands — daily AI summary (Gemini)
 // Redeploy this into the NEW Supabase project as an Edge Function named
 // "daily-summary". Set GEMINI_API_KEY as a secret on the function.
 //

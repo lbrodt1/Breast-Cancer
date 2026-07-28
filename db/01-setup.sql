@@ -175,7 +175,7 @@ on conflict (id) do nothing;
 
 insert into public.circle_members (circle_id, user_id, role, display_name)
 select 'patient-recovery', id, 'owner', 'Laura'
-from auth.users where email = 'YOU@EXAMPLE.COM'
+from auth.users where email = 'laura.sagebiel@gmail.com'
 on conflict (circle_id, user_id) do update set role = 'owner';
 
 -- For each additional caregiver, first create their account in

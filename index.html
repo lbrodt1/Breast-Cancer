@@ -203,7 +203,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="1.0.11"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
+const APP_VERSION="1.0.12"; // shown small in the app footer; auto-incremented by deploy.ps1 — leave the number for the script to manage
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -218,8 +218,8 @@ const PERIODS=[["morning","Morning",0,12],["midday","Midday",12,17],["evening","
 const PLABEL=Object.fromEntries(PERIODS.map(p=>[p[0],p[1]]));
 
 /* ---------- shared sync (Supabase) ---------- */
-const SYNC={url:"https://zewetwghnbiynuqkisbg.supabase.co",key:"sb_publishable_K6vRtMTydN6VqqBh6d1itA_SR5RHCkz",table:"tracking_records"};
-const AI_FN_URL="https://zewetwghnbiynuqkisbg.supabase.co/functions/v1/daily-summary";
+const SYNC={url:"https://jlmqtneetdhtbrwaltfn.supabase.co",key:"sb_publishable_vMl5lDkoVK0XhrT4xt4eLA_MEk1HAz1",table:"tracking_records"};
+const AI_FN_URL="https://jlmqtneetdhtbrwaltfn.supabase.co/functions/v1/daily-summary";
 let CIRCLE=null, MYROLE=null, MYUID=null, MYEMAIL=null;   // resolved from circle_members after sign-in
 function canWrite(){return MYROLE==="owner"||MYROLE==="caregiver";}
 const AUTHKEY="trackerAuth";
@@ -1231,7 +1231,7 @@ function moreHTML(){
     <div class="muted">Signed in as ${esc(MYEMAIL||(AUTH&&AUTH.email)||"—")} · role: ${esc(MYROLE||"—")}. Signing out only affects this phone.</div>
     <p class="muted" style="margin-top:10px">Everything syncs automatically to the shared care log — every caregiver's phone sees the same tasks, drain totals, and notes. Export makes a backup copy; Import restores one.</p>
   </div>
-  <div class="muted" style="text-align:center;font-size:11px;margin-top:14px;opacity:.7">Recovery Tracker&nbsp;·&nbsp;v${APP_VERSION}</div>
+  <div class="muted" style="text-align:center;font-size:11px;margin-top:14px;opacity:.7">OktoHands&nbsp;·&nbsp;v${APP_VERSION}</div>
   <p class="muted" style="text-align:center;margin:16px 0">Instructions adapted from Memorial Sloan Kettering's “Caring for Your Jackson-Pratt Drain” and “Exercises After Your Mastectomy” guides (including the surgeon's handwritten notes) and the NBCF prep checklist. This app is a helper, not medical advice — when unsure, call the care team.</p>`;
 }
 function wireMore(){

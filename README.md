@@ -1,4 +1,4 @@
-# Recovery Tracker
+# OktoHands
 
 A single-file web app that helps caregivers track a loved one's recovery after
 breast surgery — drains, medications, exercises, notes, an AI daily summary, and

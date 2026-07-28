@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes to Recovery Tracker. Newest entries on top.
+All notable changes to OktoHands. Newest entries on top.
+
+## v1.0.12 - 2026-07-27
+- Moved to a new Supabase project with its own account and database
 
 ## v1.0.11 - 2026-07-27
+- Renamed the app to OktoHands in the footer, README and changelog header
 - Each caregiver now signs in with their own account instead of a shared login
 - Access is scoped to your care circle, with owner, caregiver and viewer roles
 - Deleting something now hides it rather than erasing it, and every change is recorded in an audit trail
