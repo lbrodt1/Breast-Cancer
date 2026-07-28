@@ -5,35 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F7F4F0">
+<meta name="theme-color" content="#F4F9F9">
 </head>
 <body>
 <!--A-START-->
-<title>Recovery Tracker</title>
+<title>OktoHands</title>
 <style>
   :root{
-    --bg:#F7F4F0; --card:#FFFFFF; --card2:#F1ECE7; --ink:#2B2530; --ink2:#6E6472;
-    --line:#E4DDD6; --accent:#8E4A5B; --accent-ink:#FFFFFF; --accent-soft:#F3E4E8;
-    --good:#5F7D66; --good-soft:#E7EFE8; --warn:#A9743A; --warn-soft:#F5EADA;
-    --alert:#A63D40; --alert-soft:#F6E3E3; --shadow:0 1px 3px rgba(43,37,48,.08);
+    --bg:#F4F9F9; --card:#FFFFFF; --card2:#E9F3F4; --ink:#12303A; --ink2:#57707A;
+    --line:#D6E7E9; --accent:#0E4B57; --accent-ink:#FFFFFF; --accent-soft:#DDECEE;
+    --good:#0F6B5E; --good-soft:#DCEFEA; --warn:#8F6410; --warn-soft:#FDF1D8;
+    --alert:#C2492B; --alert-soft:#FCE5DE; --shadow:0 1px 3px rgba(18,48,58,.10);
+    --coral:#EF6F53; --amber:#F6B93B; --teal:#0E4B57;
   }
   @media (prefers-color-scheme: dark){ :root{
-    --bg:#171519; --card:#211E24; --card2:#2A262E; --ink:#EDE7EA; --ink2:#A99FAC;
-    --line:#38323D; --accent:#C98B9B; --accent-ink:#2B1219; --accent-soft:#3A2830;
-    --good:#8FB098; --good-soft:#26332A; --warn:#CFA05F; --warn-soft:#3A3022;
-    --alert:#D98A8C; --alert-soft:#402628; --shadow:0 1px 3px rgba(0,0,0,.35);
+    --bg:#0A2C34; --card:#0E4B57; --card2:#145A67; --ink:#EFF7F8; --ink2:#A2C0C6;
+    --line:#1C6674; --accent:#F6B93B; --accent-ink:#12303A; --accent-soft:#1A5C69;
+    --good:#5FCBB8; --good-soft:#0F4A46; --warn:#F6B93B; --warn-soft:#3E3418;
+    --alert:#EF8B72; --alert-soft:#4A2A21; --shadow:0 1px 3px rgba(0,0,0,.4);
+    --coral:#EF6F53; --amber:#F6B93B; --teal:#0E4B57;
   }}
   :root[data-theme="light"]{
-    --bg:#F7F4F0; --card:#FFFFFF; --card2:#F1ECE7; --ink:#2B2530; --ink2:#6E6472;
-    --line:#E4DDD6; --accent:#8E4A5B; --accent-ink:#FFFFFF; --accent-soft:#F3E4E8;
-    --good:#5F7D66; --good-soft:#E7EFE8; --warn:#A9743A; --warn-soft:#F5EADA;
-    --alert:#A63D40; --alert-soft:#F6E3E3; --shadow:0 1px 3px rgba(43,37,48,.08);
+    --bg:#F4F9F9; --card:#FFFFFF; --card2:#E9F3F4; --ink:#12303A; --ink2:#57707A;
+    --line:#D6E7E9; --accent:#0E4B57; --accent-ink:#FFFFFF; --accent-soft:#DDECEE;
+    --good:#0F6B5E; --good-soft:#DCEFEA; --warn:#8F6410; --warn-soft:#FDF1D8;
+    --alert:#C2492B; --alert-soft:#FCE5DE; --shadow:0 1px 3px rgba(18,48,58,.10);
+    --coral:#EF6F53; --amber:#F6B93B; --teal:#0E4B57;
   }
   :root[data-theme="dark"]{
-    --bg:#171519; --card:#211E24; --card2:#2A262E; --ink:#EDE7EA; --ink2:#A99FAC;
-    --line:#38323D; --accent:#C98B9B; --accent-ink:#2B1219; --accent-soft:#3A2830;
-    --good:#8FB098; --good-soft:#26332A; --warn:#CFA05F; --warn-soft:#3A3022;
-    --alert:#D98A8C; --alert-soft:#402628; --shadow:0 1px 3px rgba(0,0,0,.35);
+    --bg:#0A2C34; --card:#0E4B57; --card2:#145A67; --ink:#EFF7F8; --ink2:#A2C0C6;
+    --line:#1C6674; --accent:#F6B93B; --accent-ink:#12303A; --accent-soft:#1A5C69;
+    --good:#5FCBB8; --good-soft:#0F4A46; --warn:#F6B93B; --warn-soft:#3E3418;
+    --alert:#EF8B72; --alert-soft:#4A2A21; --shadow:0 1px 3px rgba(0,0,0,.4);
+    --coral:#EF6F53; --amber:#F6B93B; --teal:#0E4B57;
   }
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0}
@@ -54,6 +58,18 @@
   header.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line);margin-bottom:14px}
   header.top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
   header.top h1{font-size:24px}
+  /* OktoHands mascot */
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand img{width:42px;height:auto;flex:none;display:block}
+  .brand .wm{font-size:22px;line-height:1.05;letter-spacing:-.01em}
+  .brand .wm b{color:var(--accent)}
+  .brand .wm i{font-style:normal;color:#D9542F}
+  .hero{text-align:center;padding:6px 0 2px}
+  .hero img{width:min(210px,52vw);height:auto;display:block;margin:0 auto 6px}
+  .hero .wm{font-size:28px;letter-spacing:-.01em}
+  .hero .wm b{color:var(--accent)}
+  .hero .wm i{font-style:normal;color:#D9542F}
+  .hero .tag{font-size:13px;color:var(--ink2);margin-top:2px}
   .daychip{font-size:13px;color:var(--ink2)}
   .whochip{font-size:13px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink)}
 
@@ -202,10 +218,10 @@ const PERIODS=[["morning","Morning",0,12],["midday","Midday",12,17],["evening","
 const PLABEL=Object.fromEntries(PERIODS.map(p=>[p[0],p[1]]));
 
 /* ---------- shared sync (Supabase) ---------- */
-const SYNC={url:"https://zewetwghnbiynuqkisbg.supabase.co",key:"sb_publishable_K6vRtMTydN6VqqBh6d1itA_SR5RHCkz",table:"mom_recovery_records"};
+const SYNC={url:"https://zewetwghnbiynuqkisbg.supabase.co",key:"sb_publishable_K6vRtMTydN6VqqBh6d1itA_SR5RHCkz",table:"tracking_records"};
 const AI_FN_URL="https://zewetwghnbiynuqkisbg.supabase.co/functions/v1/daily-summary";
-const CIRCLE="brodt-recovery";            // one care circle for now; becomes per-household later
-const AUTHKEY="momRecoveryAuth";
+const CIRCLE="patient-recovery";          // one care circle for now; becomes per-household later
+const AUTHKEY="trackerAuth";
 let AUTH={access:null,refresh:null,expires:0,email:null};
 function loadAuth(){try{const a=JSON.parse(localStorage.getItem(AUTHKEY)||"null");if(a&&a.refresh)AUTH=a;}catch(e){}}
 function saveAuth(){try{localStorage.setItem(AUTHKEY,JSON.stringify(AUTH));}catch(e){}}
@@ -327,7 +343,7 @@ function setSyncUI(s){
 }
 
 /* ---------- state ---------- */
-const KEY="momRecoveryV1", DEVKEY="momRecoveryDevice";
+const KEY="trackerStateV1", DEVKEY="trackerDevice";
 let S=null;
 function defaults(){return{
   v:1, setup:false, patient:"Mom", patientRelation:"", surgeryDate:todayStr(), careEndDate:null, caregivers:["Caregiver"],
@@ -508,7 +524,7 @@ function toast(msg){
 function headerHTML(){
   const d=dayNum(todayStr()),w=weekNum(todayStr()),tw=totalWeeks();
   const sub=d<0?`Surgery in ${-d} day${-d===1?"":"s"}`:(w>tw?`Day ${d} · Care schedule complete`:`Day ${d} · Week ${w} of ${tw}`);
-  return `<header class="top"><div class="row"><h1>Recovery Tracker</h1>
+  return `<header class="top"><div class="row"><div class="brand"><img src="okto.png" alt="" width="42"><h1 class="wm"><b>Okto</b><i>Hands</i></h1></div>
     <button class="whochip" id="whobtn" title="Who's caring right now">🤝 ${esc(me())}</button></div>
     <div class="daychip"><strong style="color:var(--accent)">${esc(S.patient)}</strong>${S.patientRelation?` <span class="muted">(${esc(S.patientRelation)})</span>`:""} · ${sub} · ${fmtDateNice(todayStr())}<span id="syncdot">${syncState==="err"?" · offline — saved on this phone, will catch up":""}</span> <span style="font-size:11px;opacity:.5" title="App version">v${APP_VERSION}</span></div></header>`;
 }
@@ -547,7 +563,9 @@ function render(){
 
 /* ---------- setup ---------- */
 function setupHTML(){return `
-  <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Let's set up the recovery companion — takes one minute.</div></header>
+  <header class="top"><div class="hero"><img src="okto.png" alt="OktoHands"><div class="wm"><b>Okto</b><i>Hands</i></div>
+    <div class="tag">More hands around the people you love.</div></div>
+    <div class="daychip" style="text-align:center;margin-top:8px">Let's set up the recovery companion — takes one minute.</div></header>
   <div class="card">
     <div class="field"><label>Patient's name</label><input id="su-name" value="${esc(S.patient&&S.patient!=="Mom"?S.patient:"")}" placeholder="e.g. Betty"></div>
     <div class="field"><label>Relationship to you <span style="font-weight:400">(optional)</span></label><input id="su-rel" value="${esc(S.patientRelation||"")}" placeholder="e.g. Mom, Dad, Wife"></div>
@@ -1562,7 +1580,9 @@ function closeSheet(){if(activeRecognition){try{activeRecognition.stop();}catch(
 function renderSignIn(msg){
   document.getElementById("tabbar").innerHTML="";
   $("#app").innerHTML=`
-  <header class="top"><h1>Recovery Tracker 💗</h1><div class="daychip">Sign in to open the shared care log</div></header>
+  <header class="top"><div class="hero"><img src="okto.png" alt="OktoHands"><div class="wm"><b>Okto</b><i>Hands</i></div>
+    <div class="tag">Care that never drops the ball.</div></div>
+    <div class="daychip" style="text-align:center;margin-top:8px">Sign in to open the shared care log</div></header>
   <div class="card">
     <div class="field"><label>Email</label><input id="si-email" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com" value="${esc((AUTH&&AUTH.email)||"")}"></div>
     <div class="field"><label>Password</label><input id="si-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>

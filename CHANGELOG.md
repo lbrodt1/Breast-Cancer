@@ -3,10 +3,13 @@
 All notable changes to Recovery Tracker. Newest entries on top.
 
 ## v1.0.11 - 2026-07-27
+- Rebranded as OktoHands — the octopus now appears in the header, and on the setup and sign-in screens
+- New colour palette built on the brand colours: deep teal, coral, warm amber and white
 - Added a sign-in screen so the care log is no longer readable by anyone with the link
 - Each phone stays signed in, so caregivers should only need to do this once
 - Added Sign out to More, under Data
 - Records now carry a care-circle id, so the log can support more than one household later
+- Renamed the sync table to tracking_records and made the stored keys generic, so the app isn't tied to one person
 - Removed the surname from the patient-name example on the setup screen
 
 ## v1.0.10 - 2026-07-26
