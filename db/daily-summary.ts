@@ -48,6 +48,7 @@ Deno.serve(async (req: Request) => {
   let body: any = {};
   try { body = await req.json(); } catch { /* empty */ }
   const { patient, date, facts } = body || {};
+  // The app sends a placeholder, never a real name. Do not log `facts`.
   if (!facts || typeof facts !== "string") {
     return new Response(JSON.stringify({ error: "missing facts" }), { status: 400, headers: { ...CORS, "content-type": "application/json" } });
   }

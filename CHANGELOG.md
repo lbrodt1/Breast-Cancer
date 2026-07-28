@@ -3,6 +3,11 @@
 All notable changes to Recovery Tracker. Newest entries on top.
 
 ## v1.0.11 - 2026-07-27
+- Each caregiver now signs in with their own account instead of a shared login
+- Access is scoped to your care circle, with owner, caregiver and viewer roles
+- Deleting something now hides it rather than erasing it, and every change is recorded in an audit trail
+- The patient's name is no longer sent to the AI summary service
+- Made the app person-neutral: default patient name is now "Patient", and the wording no longer assumes the patient is a woman
 - Rebranded as OktoHands — the octopus now appears in the header, and on the setup and sign-in screens
 - New colour palette built on the brand colours: deep teal, coral, warm amber and white
 - Added a sign-in screen so the care log is no longer readable by anyone with the link
